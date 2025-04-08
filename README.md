@@ -5,7 +5,7 @@ Bienvenue sur le projet collaboratif de notre site pour l'association Astropret 
 Ce projet utilise **Symfony**, un framework PHP moderne.  
 Nous allons tous travailler **ensemble** via GitHub.
 
-## 🔧 Prérequis à installer
+Prérequis à installer
 
 Avant de commencer à coder, assure-toi d’avoir installé sur ton ordinateur :
 
@@ -16,31 +16,42 @@ Avant de commencer à coder, assure-toi d’avoir installé sur ton ordinateur :
 - Un serveur local comme **Wamp**
 - Un éditeur de code comme **VS Code**
 
----
+Étapes pour démarrer le projet
 
-## 🚀 Étapes pour démarrer le projet
-
-### 1. Cloner le projet
+ 1. Cloner le projet
 
 Ouvre ton terminal et tape :
 
 ```bash
 https://github.com/osama4yeo/symfony-astropret.git
 ```
-Ensuite, va dans le dossier : cd symfony-astropret
 
-Installer les dépendances: composer install
+Ensuite, accéder au dossier du projet : cd symfony-astropret
+
+Installer les dépendances:
+```bash
+composer install
+```
 Cela installera tous les fichiers nécessaires à Symfony.
+
 
 Pour lancer le serveur Symfony : Dans le terminal, tape : symfony serve
 
-Puis ouvre ton navigateur et va à http://localhost:8000
+Puis ouvre ton navigateur et va à
+```bash
+http://localhost:8000
+``` 
 
 
 Collaboration entre nous
-Pour télécharger les dernières modifications du projet : git pull origin master
+Pour télécharger les dernières modifications du projet : 
+```bash
+git pull origin master
+``` 
 
 Pour envoyer tes changements sur GitHub :
+```bash
 git add .
 git commit -m "Ce que tu as modifié"
 git push origin master
+```
