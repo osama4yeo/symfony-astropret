@@ -1,4 +1,3 @@
-
 # Projet Astropret -  Symfony 
 
 Bienvenue sur le projet collaboratif de notre site pour l'association Astropret !  
@@ -15,6 +14,24 @@ Avant de commencer à coder, assure-toi d’avoir installé sur ton ordinateur :
 - [Symfony CLI](https://symfony.com/download) ✅
 - Un serveur local comme **Wamp**
 - Un éditeur de code comme **VS Code**
+
+Comment utiliser GitHub pour synchroniser le projet
+
+installer Git : 
+```bash
+https://www.youtube.com/watch?v=iYkLrXobBbA
+```
+(ouvrir le fichier téléchargé en admin) 
+
+Initialiser Git dans le dossier avec :
+```bash
+git init
+```
+
+Sur ton terminal, ajoute l'URL du dépôt distant:
+```bash
+git remote add origin https://github.com/osama4yeo/symfony-astropret.git
+```
 
 Étapes pour démarrer le projet
 
@@ -44,7 +61,7 @@ http://localhost:8000
 
 
 Collaboration entre nous
-Pour télécharger les dernières modifications du projet : 
+Pour récupérer les dernières modifications du projet : 
 ```bash
 git pull origin master
 ``` 
@@ -52,6 +69,6 @@ git pull origin master
 Pour envoyer tes changements sur GitHub :
 ```bash
 git add .
-git commit -m "Ce que tu as modifié"
-git push origin master
+git commit -m "Description claire de vos modifications"
+git push origin main
 ```
