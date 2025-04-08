@@ -1,0 +1,72 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Calendrier des événements
+    <div id="calendar"></div>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <!-- Inclusion de FullCalendar -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet">
+    <!-- Styles personnalisés pour améliorer l'affichage des événements -->
+    <style>
+        /* Permettre au titre des événements de s'afficher sur plusieurs lignes */
+        .fc-event-title {
+            white-space: normal !important; /* Autorise le retour à la ligne */
+            overflow: visible;
+        }
+        /* Exemple de style pour une infobulle (tooltip) */
+        .fc-event-tooltip {
+            display: none;
+            position: absolute;
+            background: #333;
+            color: #fff;
+            padding: 5px;
+            border-radius: 3px;
+            z-index: 1000;
+            font-size: 0.9em;
+        }
+    </style>
+{% endblock %}
+
+
+{% block javascripts %}
+    {{ parent() }}
+    <!-- Inclusion du script FullCalendar -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                // Charge les événements depuis la route API
+                events: "{{ path('api_calendar_events') }}",
+                // Personnalisation du rendu des événements
+                eventContent: function(arg) {
+                    // Retourner un contenu HTML personnalisé pour chaque événement
+                    return {
+                        html: '<div class="fc-event-title" style="white-space: normal;">' + arg.event.title + '</div>'
+                    };
+                },
+                // Optionnel : ajouter un tooltip qui affiche le titre complet de l'événement
+                eventDidMount: function(info) {
+                    var tooltip = document.createElement('div');
+                    tooltip.classList.add('fc-event-tooltip');
+                    tooltip.innerText = info.event.title;
+                    document.body.appendChild(tooltip);
+
+                    info.el.addEventListener('mouseenter', function(e) {
+                        tooltip.style.display = 'block';
+                        tooltip.style.left = e.pageX + 'px';
+                        tooltip.style.top = e.pageY + 'px';
+                    });
+                    info.el.addEventListener('mouseleave', function() {
+                        tooltip.style.display = 'none';
+                    });
+                }
+            });
+            calendar.render();
+        });
+    </script>
+{% endblock %}
