@@ -52,7 +52,10 @@ composer install
 Cela installera tous les fichiers nécessaires à Symfony.
 
 
-Pour lancer le serveur Symfony : Dans le terminal, tape : symfony serve
+Pour lancer le serveur Symfony : Dans le terminal, tape :
+```bash
+symfony serve
+```
 
 Puis ouvre ton navigateur et va à
 ```bash
