@@ -40,7 +40,7 @@ git remote add origin https://github.com/osama4yeo/symfony-astropret.git
 Ouvre ton terminal et tape :
 
 ```bash
-https://github.com/osama4yeo/symfony-astropret.git
+git pull origin master
 ```
 
 Ensuite, accéder au dossier du projet : cd symfony-astropret
