@@ -25,4 +25,22 @@ Avant de commencer à coder, assure-toi d’avoir installé sur ton ordinateur :
 Ouvre ton terminal et tape :
 
 ```bash
-git clone https://github.com/NOM_DU_COMPTE/NOM_DU_REPO.git
+https://github.com/osama4yeo/symfony-astropret.git
+```
+Ensuite, va dans le dossier : cd symfony-astropret
+
+Installer les dépendances: composer install
+Cela installera tous les fichiers nécessaires à Symfony.
+
+Pour lancer le serveur Symfony : Dans le terminal, tape : symfony serve
+
+Puis ouvre ton navigateur et va à http://localhost:8000
+
+
+Collaboration entre nous
+Pour télécharger les dernières modifications du projet : git pull origin master
+
+Pour envoyer tes changements sur GitHub :
+git add .
+git commit -m "Ce que tu as modifié"
+git push origin master
