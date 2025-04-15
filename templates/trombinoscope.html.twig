@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Trombinoscope{% endblock %}
+
+{% block body %}
+    <h1>Trombinoscope</h1>
+    <div class="row">
+        {% for user in users %}
+            <div class="col-md-3" style="margin-bottom: 20px;">
+                <div class="card">
+                    <!-- Utilisation d'une image par défaut pour l'avatar -->
+                    <img src="{{ asset('images/default-avatar.png') }}" class="card-img-top" alt="Avatar de {{ user.email }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ user.email }}</h5>
+                        {# Tu peux ajouter d'autres infos, par exemple le nom complet si tu as ces champs #}
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <p>Aucun utilisateur trouvé.</p>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .card {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: 0.3s;
+        }
+        .card:hover {
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+{% endblock %}

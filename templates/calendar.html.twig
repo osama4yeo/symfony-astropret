@@ -30,7 +30,6 @@
     </style>
 {% endblock %}
 
-
 {% block javascripts %}
     {{ parent() }}
     <!-- Inclusion du script FullCalendar -->
@@ -40,16 +39,38 @@
             var calendarEl = document.getElementById('calendar');
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
-                // Charge les événements depuis la route API
-                events: "{{ path('api_calendar_events') }}",
-                // Personnalisation du rendu des événements
+                events: "{{ path('api_events_list') }}",,  // API pour récupérer les événements
+                selectable: true, // Permet de sélectionner une plage de dates
+select: function(info) {
+    const title = prompt('Titre de l’événement :');
+    if (title) {
+        fetch("{{ path('api_event_create') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                title: title,
+                start: info.startStr,
+                end: info.endStr
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'created') {
+                calendar.refetchEvents(); // Recharge les événements si tout va bien
+            } else {
+                alert('Erreur lors de la création : ' + (data.error || 'inconnue'));
+            }
+        });
+    }
+},
+
                 eventContent: function(arg) {
-                    // Retourner un contenu HTML personnalisé pour chaque événement
                     return {
                         html: '<div class="fc-event-title" style="white-space: normal;">' + arg.event.title + '</div>'
                     };
                 },
-                // Optionnel : ajouter un tooltip qui affiche le titre complet de l'événement
                 eventDidMount: function(info) {
                     var tooltip = document.createElement('div');
                     tooltip.classList.add('fc-event-tooltip');
@@ -66,7 +87,11 @@
                     });
                 }
             });
+
+            // Initialisation du calendrier
             calendar.render();
+            calendar.refetchEvents();
+
         });
     </script>
 {% endblock %}
