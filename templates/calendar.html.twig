@@ -1,97 +1,21 @@
 {% extends 'base.html.twig' %}
 
+{# Partie du titre de la page (onglet navigateur) #}
 {% block title %}
     Calendrier des événements
-    <div id="calendar"></div>
 {% endblock %}
 
-{% block stylesheets %}
-    {{ parent() }}
-    <!-- Inclusion de FullCalendar -->
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet">
-    <!-- Styles personnalisés pour améliorer l'affichage des événements -->
-    <style>
-        /* Permettre au titre des événements de s'afficher sur plusieurs lignes */
-        .fc-event-title {
-            white-space: normal !important; /* Autorise le retour à la ligne */
-            overflow: visible;
-        }
-        /* Exemple de style pour une infobulle (tooltip) */
-        .fc-event-tooltip {
-            display: none;
-            position: absolute;
-            background: #333;
-            color: #fff;
-            padding: 5px;
-            border-radius: 3px;
-            z-index: 1000;
-            font-size: 0.9em;
-        }
-    </style>
-{% endblock %}
+{# Partie du contenu principal de la page #}
+{% block body %}
+    <h1>Calendrier Astroprêt</h1>
 
-{% block javascripts %}
-    {{ parent() }}
-    <!-- Inclusion du script FullCalendar -->
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var calendarEl = document.getElementById('calendar');
-            var calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                events: "{{ path('api_events_list') }}",,  // API pour récupérer les événements
-                selectable: true, // Permet de sélectionner une plage de dates
-select: function(info) {
-    const title = prompt('Titre de l’événement :');
-    if (title) {
-        fetch("{{ path('api_event_create') }}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                title: title,
-                start: info.startStr,
-                end: info.endStr
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'created') {
-                calendar.refetchEvents(); // Recharge les événements si tout va bien
-            } else {
-                alert('Erreur lors de la création : ' + (data.error || 'inconnue'));
-            }
-        });
-    }
-},
-
-                eventContent: function(arg) {
-                    return {
-                        html: '<div class="fc-event-title" style="white-space: normal;">' + arg.event.title + '</div>'
-                    };
-                },
-                eventDidMount: function(info) {
-                    var tooltip = document.createElement('div');
-                    tooltip.classList.add('fc-event-tooltip');
-                    tooltip.innerText = info.event.title;
-                    document.body.appendChild(tooltip);
-
-                    info.el.addEventListener('mouseenter', function(e) {
-                        tooltip.style.display = 'block';
-                        tooltip.style.left = e.pageX + 'px';
-                        tooltip.style.top = e.pageY + 'px';
-                    });
-                    info.el.addEventListener('mouseleave', function() {
-                        tooltip.style.display = 'none';
-                    });
-                }
-            });
-
-            // Initialisation du calendrier
-            calendar.render();
-            calendar.refetchEvents();
-
-        });
-    </script>
+    {# Insertion du calendrier Google via une seule iframe #}
+    <iframe 
+        src="https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=Europe%2FParis&showPrint=0&src=YXN0cm9wcmV0QGdtYWlsLmNvbQ&src=ZnIuZnJlbmNoI2hvbGlkYXlAZ3JvdXAudi5jYWxlbmRhci5nb29nbGUuY29t&color=%23039BE5&color=%230B8043"
+        style="border:solid 1px #777;" 
+        width="100%" 
+        height="600" 
+        frameborder="0" 
+        scrolling="no">
+    </iframe>
 {% endblock %}
