@@ -1,0 +1,54 @@
+{# templates/reservation/new.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvelle Réservation{% endblock %}
+
+{% block body %}
+    <h1>
+        Réserver du matériel
+        {# Affiche le nom du matériel si pré-sélectionné #}
+        {% if materielPredefini %} : {{ materielPredefini.nom }} {% endif %}
+    </h1>
+
+    {% include 'partials/_flash_messages.html.twig' %} {# Si tu utilises ce partial #}
+
+    {{ form_start(form) }}
+
+        {# Si le matériel est prédéfini, on peut choisir de cacher le champ
+           ou de le rendre readonly. Sinon, on l'affiche normalement. #}
+        {% if materielPredefini %}
+            {# Option 1: Afficher le champ mais désactivé #}
+            {# {{ form_row(form.materiel, {'attr': {'disabled': 'disabled'}}) }} #}
+            {# Attention: un champ désactivé n'envoie pas sa valeur. Il faut soit le pré-remplir
+               dans le contrôleur (comme on l'a fait), soit utiliser un champ caché en plus.
+               Le plus simple est de le laisser modifiable ou de gérer via le contrôleur. #}
+
+             {# Option 2: Afficher juste le nom et laisser le champ EntityType caché ou non rendu s'il est bien setté #}
+              {# <p>Vous réservez : <strong>{{ materielPredefini.nom }}</strong></p> #}
+              {# Ne pas faire form_row(form.materiel) dans ce cas SI l'objet est bien pré-rempli #}
+
+             {# Option la plus simple pour commencer : Laisser le champ tel quel, il sera pré-sélectionné #}
+              {{ form_row(form.materiel) }}
+
+        {% else %}
+            {# Si aucun matériel n'est prédéfini, affiche le champ normalement #}
+            {{ form_row(form.materiel) }}
+        {% endif %}
+
+        {# Affiche les autres champs #}
+        {{ form_row(form.dateDebut) }}
+        {{ form_row(form.dateFin) }}
+        {{ form_row(form.latitude) }}
+        {{ form_row(form.longitude) }}
+
+        <button type="submit" class="btn btn-primary mt-3">Confirmer la réservation</button>
+
+    {{ form_end(form) }}
+
+    <p class="mt-3">
+        <a href="{{ path('app_materiel_index') }}">Retour à la liste du matériel</a>
+        {# Ou lien vers l'index des réservations #}
+        {# <a href="{{ path('reservation_index') }}">Voir mes réservations</a> #}
+    </p>
+
+{% endblock %}

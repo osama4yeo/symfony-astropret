@@ -1,0 +1,13 @@
+{# templates/partials/_flash_messages.html.twig #}
+
+{# Boucle sur tous les types de messages flash disponibles (ex: 'success', 'danger', 'warning', 'info') #}
+{% for label, messages in app.flashes %}
+    {# Pour chaque type, boucle sur les messages associés #}
+    {% for message in messages %}
+        {# Affiche chaque message dans une div avec une classe CSS correspondante #}
+        {# Note: Les classes "alert alert-{{ label }}" sont typiques de Bootstrap. Adapte-les si tu utilises un autre framework CSS ou ton propre style. #}
+        <div class="alert alert-{{ label }}" role="alert">
+            {{ message }} {# Affiche le texte du message #}
+        </div>
+    {% endfor %}
+{% endfor %}

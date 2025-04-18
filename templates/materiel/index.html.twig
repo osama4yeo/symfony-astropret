@@ -1,0 +1,51 @@
+{# templates/materiel/index.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste du Matériel{% endblock %}
+
+{% block body %}
+    <h1>Liste du Matériel Disponible</h1>
+
+    {# ... (affichage des messages flash, etc.) ... #}
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>État</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for materiel in materiels %}
+            <tr>
+                <td>{{ materiel.nom }}</td>
+                <td>
+                    <span class="badge bg-{{ materiel.etat == 'libre' ? 'success' : 'warning' }}">
+                        {{ materiel.etat | capitalize }}
+                    </span>
+                </td>
+                <td>
+                    {# Lien pour voir les détails (si tu as la route 'app_materiel_show') #}
+                    <a href="{{ path('app_materiel_show', {'id': materiel.id}) }}" class="btn btn-sm btn-info">Voir</a>
+
+                    {# === LE LIEN IMPORTANT === #}
+                    {# On ne l'affiche que si le matériel est libre #}
+                    {% if materiel.etat == 'libre' %}
+                        <a href="{{ path('reservation_new', {'materielId': materiel.id}) }}" class="btn btn-sm btn-primary">
+                            Louer
+                        </a>
+                    {% else %}
+                         <span class="text-muted">Indisponible</span>
+                    {% endif %}
+                     {# ... (autres actions comme éditer/supprimer si nécessaire) ... #}
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="3">Aucun matériel trouvé.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
