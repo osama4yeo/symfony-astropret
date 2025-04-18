@@ -73,5 +73,5 @@ Pour envoyer tes changements sur GitHub :
 ```bash
 git add .
 git commit -m "Description claire de vos modifications"
-git push origin main
+git push origin master
 ```
