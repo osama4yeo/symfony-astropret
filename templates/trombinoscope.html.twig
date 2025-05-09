@@ -4,14 +4,21 @@
 
 {% block body %}
     <h1>Trombinoscope</h1>
+    <a href="{{ path('user_profile') }}" class="btn btn-success" style="margin-bottom: 20px;">Modifier Mon Profil</a>
     <div class="row">
         {% for user in users %}
             <div class="col-md-3" style="margin-bottom: 20px;">
                 <div class="card">
+
                     <!-- Utilisation d'une image par défaut pour l'avatar -->
-                    <img src="{{ asset('images/default-avatar.png') }}" class="card-img-top" alt="Avatar de {{ user.email }}">
+                    {% if user.avatar %}
+                        <img src="{{ asset('uploads/avatars/' ~ user.avatar) }}" ...>
+                    {% else %}
+                        <img src="{{ asset('images/default-avatar.webp') }}" class="avatar-img" alt="Avatar par défaut">
+                    {% endif %}
+
                     <div class="card-body">
-                        <h5 class="card-title">{{ user.email }}</h5>
+                        <h5 class="card-title">{{ user.firstName }} {{ user.lastName }} {{ user.email }}</h5>
                         {# Tu peux ajouter d'autres infos, par exemple le nom complet si tu as ces champs #}
                     </div>
                 </div>
@@ -32,5 +39,13 @@
         .card:hover {
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
         }
+        .avatar-img {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 50%;
+        margin: 0 auto;
+        display: block;
+    }
     </style>
 {% endblock %}
