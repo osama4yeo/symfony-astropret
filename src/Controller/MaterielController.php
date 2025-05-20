@@ -37,8 +37,8 @@ final class MaterielController extends AbstractController
     {
         // Créer une nouvelle instance de Materiel
         $materiel = new Materiel();
-        // Créer le formulaire basé sur ReservationType et lié à l'instance $materiel
-        $form = $this->createForm(ReservationType::class, $materiel);
+        // Créer le formulaire basé sur MaterielType et lié à l'instance $materiel
+        $form = $this->createForm(MaterielType::class, $materiel);
         // Traiter la requête HTTP entrante
         $form->handleRequest($request);
 
@@ -61,7 +61,7 @@ final class MaterielController extends AbstractController
         }
 
         // Si la méthode est GET ou si le formulaire n'est pas valide, afficher le formulaire
-        return $this->render('materiel/new.html.twig', [
+        return $this->render('materiel/index.html.twig', [
             'materiel' => $materiel, // Optionnel, si la vue en a besoin
             'form' => $form->createView(), // Passer la vue du formulaire au template
         ]);
