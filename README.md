@@ -75,3 +75,7 @@ git add .
 git commit -m "Description claire de vos modifications"
 git push origin master
 ```
+token :
+```bash
+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
+```
