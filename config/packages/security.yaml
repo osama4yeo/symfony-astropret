@@ -1,17 +1,61 @@
+# config/packages/security.yaml
 security:
     # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
     password_hashers:
+        # Utilise 'auto' pour que Symfony choisisse le meilleur algorithme
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
-        users_in_memory: { memory: null }
+        # --- MODIFICATION 1: Définir le provider pour utiliser notre entité User ---
+        app_user_provider: # Tu peux choisir le nom que tu veux, mais 'app_user_provider' est courant
+            entity:
+                class: App\Entity\User # Le chemin vers ta classe User
+                property: email        # La propriété de l'entité User utilisée pour l'identifiant de connexion (login)
+                                       # Doit correspondre à ce que retourne User::getUserIdentifier()
+
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         main:
             lazy: true
-            provider: users_in_memory
+            # --- MODIFICATION 2: Utiliser notre provider Doctrine ---
+            provider: app_user_provider # Utilise le provider défini ci-dessus
+            entry_point: App\Security\AppAuthenticator
+
+            # --- MODIFICATION 3: Ajouter la configuration pour le formulaire de connexion ---
+            # Cette section sera probablement ajoutée/modifiée par 'make:auth'
+            # Si tu n'as pas encore lancé 'make:auth', tu devras le faire ou ajouter cela manuellement.
+            form_login:
+                # "app_login" est le nom de la route que tu vas créer pour la page de connexion
+                login_path: app_login
+                # "app_login" est aussi la route où le formulaire de connexion sera soumis
+                check_path: app_login
+                # Optionnel: où rediriger après une connexion réussie si aucune page précédente n'est mémorisée
+                # default_target_path: app_home
+                # enable_csrf: true # Bonne pratique pour la sécurité
+
+            # --- MODIFICATION 4: Ajouter la configuration pour la déconnexion ---
+            # Sera aussi probablement ajoutée/modifiée par 'make:auth'
+            logout:
+                # "app_logout" est le nom de la route que tu vas créer pour la déconnexion
+                path: app_logout
+            custom_authenticator: App\Security\AppAuthenticator
+
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 604800
+                path: /
+                # by default, the feature is enabled by checking a checkbox in the
+                # login form, uncomment the following line to always enable it.
+                #always_remember_me: true
+                # Optionnel: où rediriger après la déconnexion
+                # target: app_home
+
+            # Optionnel : Permettre aux utilisateurs anonymes d'accéder aux pages (si pas déjà fait par défaut)
+            # Peut être nécessaire si tu as des règles access_control restrictives par défaut.
+            # anonymous: true
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
@@ -22,18 +66,27 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
+        # --- MODIFICATION 5: Ajouter des règles d'accès de base ---
+        # Rendre les pages de connexion et d'inscription publiques
+        # Assure-toi que les noms de routes 'app_login' et 'app_register' correspondent aux tiens
+        - { path: ^/login$, roles: PUBLIC_ACCESS } # Ou IS_AUTHENTICATED_ANONYMOUSLY
+        - { path: ^/register$, roles: PUBLIC_ACCESS } # Si tu as une page d'inscription
+
+        # Exemples de routes protégées (adapte les chemins et les rôles) :
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
+        # - { path: ^/reservations/new, roles: ROLE_USER } # Pour la location par un membre
+        # - { path: ^/reservations/admin, roles: ROLE_ADMIN } # Pour la gestion par un admin
+
+        # ATTENTION : Une règle trop générale comme celle ci-dessous peut tout bloquer si mal placée.
+        # Place les règles les plus spécifiques en premier.
+        # - { path: ^/, roles: ROLE_USER } # Pourrait rendre toutes les pages (sauf /login, /register) privées
 
 when@test:
     security:
         password_hashers:
-            # By default, password hashers are resource intensive and take time. This is
-            # important to generate secure password hashes. In tests however, secure hashes
-            # are not important, waste resources and increase test times. The following
-            # reduces the work factor to the lowest possible values.
             Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
                 algorithm: auto
-                cost: 4 # Lowest possible value for bcrypt
-                time_cost: 3 # Lowest possible value for argon
-                memory_cost: 10 # Lowest possible value for argon
+                cost: 4
+                time_cost: 3
+                memory_cost: 10
