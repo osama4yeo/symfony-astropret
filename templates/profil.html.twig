@@ -1,14 +1,43 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Mon Profil{% endblock %}
+{% block title %}Mon profil{% endblock %}
 
 {% block body %}
-    <h1>Modifier mon profil</h1>
+    <h1>Mon profil</h1>
 
-    {{ form_start(form) }}
-        {{ form_row(form.firstName) }}
-        {{ form_row(form.lastName) }}
-        {{ form_row(form.avatar) }}
-        <button class="btn btn-primary">Enregistrer</button>
-    {{ form_end(form) }}
+    {% if user %}
+        <div class="card mx-auto" style="max-width: 400px;">
+            <div class="card-body text-center">
+
+                {% if user.avatar %}
+                    <img src="{{ asset('uploads/avatars/' ~ user.avatar) }}" class="avatar-img mb-3" alt="Mon avatar">
+                {% else %}
+                    <img src="{{ asset('images/default-avatar.webp') }}" class="avatar-img mb-3" alt="Avatar par défaut">
+                {% endif %}
+
+                <h5 class="card-title">{{ user.firstName }} {{ user.lastName }}</h5>
+                <p class="card-text">{{ user.email }}</p>
+
+                <a href="{{ path('app_logout') }}" class="btn btn-danger mt-3">Se déconnecter</a>
+            </div>
+        </div>
+    {% else %}
+        <p>Vous devez être connecté pour voir cette page.</p>
+
+        <a href="{{ path('app_register') }}" class="btn btn-outline-primary mb-3">
+            Créer un nouveau compte
+        </a>
+    {% endif %}
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .avatar-img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+    </style>
 {% endblock %}
