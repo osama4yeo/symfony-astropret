@@ -9,8 +9,3 @@ services:
     App\:
         resource: '../src/*'
         exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
-
-    # Ici, on ajoute explicitement notre subscriber (si nécessaire)
-    App\EventSubscriber\CalendarSubscriber:
-        tags:
-            - { name: 'kernel.event_subscriber' }

@@ -1,7 +1,7 @@
 # config/packages/security.yaml
 security:
-    # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
     password_hashers:
+<<<<<<< HEAD
         # Utilise 'auto' pour que Symfony choisisse le meilleur algorithme
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
 
@@ -13,13 +13,25 @@ security:
                 class: App\Entity\User # Le chemin vers ta classe User
                 property: email        # La propriété de l'entité User utilisée pour l'identifiant de connexion (login)
                                        # Doit correspondre à ce que retourne User::getUserIdentifier()
+=======
+        App\Entity\User:
+            algorithm: auto
+
+    providers:
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
+>>>>>>> 8e8339694aae807f8449930765addad14bc19d6b
 
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+
         main:
             lazy: true
+<<<<<<< HEAD
             # --- MODIFICATION 2: Utiliser notre provider Doctrine ---
             provider: app_user_provider # Utilise le provider défini ci-dessus
             entry_point: App\Security\AppAuthenticator
@@ -56,16 +68,23 @@ security:
             # Optionnel : Permettre aux utilisateurs anonymes d'accéder aux pages (si pas déjà fait par défaut)
             # Peut être nécessaire si tu as des règles access_control restrictives par défaut.
             # anonymous: true
+=======
+            provider: app_user_provider
+            custom_authenticator: App\Security\UserAuthenticator
+>>>>>>> 8e8339694aae807f8449930765addad14bc19d6b
 
-            # activate different ways to authenticate
-            # https://symfony.com/doc/current/security.html#the-firewall
+            logout:
+                path: app_logout
+                target: app_login  # ou autre route après déconnexion
 
-            # https://symfony.com/doc/current/security/impersonating_user.html
-            # switch_user: true
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 604800
+                path: /
+                always_remember_me: true
 
-    # Easy way to control access for large sections of your site
-    # Note: Only the *first* access control that matches will be used
     access_control:
+<<<<<<< HEAD
         # --- MODIFICATION 5: Ajouter des règles d'accès de base ---
         # Rendre les pages de connexion et d'inscription publiques
         # Assure-toi que les noms de routes 'app_login' et 'app_register' correspondent aux tiens
@@ -90,3 +109,7 @@ when@test:
                 cost: 4
                 time_cost: 3
                 memory_cost: 10
+=======
+        - { path: ^/profil, roles: ROLE_USER }
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+>>>>>>> 8e8339694aae807f8449930765addad14bc19d6b

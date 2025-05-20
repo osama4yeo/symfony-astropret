@@ -24,6 +24,7 @@
            value="{{ csrf_token('authenticate') }}"
     >
 
+<<<<<<< HEAD
     <div class="checkbox mb-3">
         <label>
             <input type="checkbox" name="_remember_me"> Remember me
@@ -33,5 +34,13 @@
     <button class="btn btn-lg btn-primary" type="submit">
         Sign in
     </button>
+=======
+    <button class="btn btn-lg btn-primary" type="submit">
+        Sign in
+    </button>
+    <a href="{{ path('app_register') }}" class="btn btn-outline-primary mb-3">
+    Créer un nouveau compte
+    </a>
+>>>>>>> 8e8339694aae807f8449930765addad14bc19d6b
 </form>
 {% endblock %}

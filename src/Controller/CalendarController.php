@@ -28,14 +28,4 @@ class CalendarController extends AbstractController
         return $this->render('calendar.html.twig');
     }
 
-    // 🟨 Route 2 : Envoie les événements au format JSON pour FullCalendar
-    #[Route('/api/calendar', name: 'api_calendar_events', methods: ['GET'])]
-    public function getCalendarEvents(): JsonResponse
-    {
-        // Appelle ton service pour récupérer les événements depuis Google Calendar
-        $events = $this->googleCalendarService->getEvents();
-
-        // Retourne les événements au format JSON pour FullCalendar
-        return new JsonResponse($events);
-    }
 }

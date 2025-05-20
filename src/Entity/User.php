@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
+<<<<<<< HEAD
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface; // NÉCESSAIRE
 use Symfony\Component\Security\Core\User\UserInterface; // NÉCESSAIRE
@@ -13,6 +14,12 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Table(name: '`user`')]
 #[UniqueEntity(fields: ['email'], message: 'Il existe déjà un compte avec cet email')]
 // --- MODIFICATION 1: Implémenter les interfaces UserInterface et PasswordAuthenticatedUserInterface ---
+=======
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+
+#[ORM\Entity(repositoryClass: UserRepository::class)]
+>>>>>>> 8e8339694aae807f8449930765addad14bc19d6b
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -36,6 +43,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'json')] // Les rôles sont stockés comme un tableau JSON
     private array $roles = [];
 
+<<<<<<< HEAD
     #[ORM\Column(length: 100, nullable: true)] // Rendre nullable si ce n'est pas obligatoire à l'inscription
     #[Assert\Length(min: 2, max: 100, minMessage: "Le prénom doit comporter au moins 2 caractères.", maxMessage: "Le prénom ne peut pas dépasser 100 caractères.")]
     private ?string $prenom = null; // Prénom
@@ -49,6 +57,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(type: 'date_immutable', nullable: true)] // Exemple: Date de naissance
     private ?\DateTimeImmutable $dateNaissance = null;
+=======
+    #[ORM\Column(length: 100)]
+    private ?string $firstName = null;
+
+    #[ORM\Column(length: 100)]
+    private ?string $lastName = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $avatar = null;
+>>>>>>> 8e8339694aae807f8449930765addad14bc19d6b
 
     public function getId(): ?int
     {
@@ -83,10 +101,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getRoles(): array
     {
         $roles = $this->roles;
+<<<<<<< HEAD
         // Garantit que chaque utilisateur a au moins ROLE_USER
         $roles[] = 'ROLE_USER';
 
         return array_unique($roles);
+=======
+
+        // Symfony attend ce rôle pour reconnaître l'utilisateur comme connecté
+        if (!in_array('ROLE_USER', $roles)) {
+            $roles[] = 'ROLE_USER';
+    }
+    return $roles;
+>>>>>>> 8e8339694aae807f8449930765addad14bc19d6b
     }
 
     public function setRoles(array $roles): static
@@ -95,6 +122,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+<<<<<<< HEAD
     /**
      * @see PasswordAuthenticatedUserInterface
      */
@@ -166,3 +194,52 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 }
+=======
+    // First Name
+    public function getFirstName(): ?string
+    {
+        return $this->firstName;
+    }
+
+    public function setFirstName(string $firstName): static
+    {
+        $this->firstName = $firstName;
+        return $this;
+    }
+
+    // Last Name
+    public function getLastName(): ?string
+    {
+        return $this->lastName;
+    }
+
+    public function setLastName(string $lastName): static
+    {
+        $this->lastName = $lastName;
+        return $this;
+    }
+
+    // Avatar
+    public function getAvatar(): ?string
+    {
+        return $this->avatar;
+    }
+
+    public function setAvatar(?string $avatar): static
+    {
+        $this->avatar = $avatar;
+        return $this;
+    }
+
+    public function eraseCredentials() : void
+    {
+        // rien ici
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->email;
+    }
+
+}
+>>>>>>> 8e8339694aae807f8449930765addad14bc19d6b

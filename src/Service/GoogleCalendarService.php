@@ -29,15 +29,6 @@ class GoogleCalendarService
         $data = json_decode($response, true);
         $formattedEvents = [];
 
-        // Formater les événements pour correspondre au format attendu par FullCalendar
-        foreach ($data['items'] as $event) {
-            $formattedEvents[] = [
-                'title' => $event['summary'] ?? 'Sans titre',
-                'start' => $event['start']['dateTime'] ?? $event['start']['date'],
-                'end' => $event['end']['dateTime'] ?? $event['end']['date']
-            ];
-        }
-
         return $formattedEvents;
     }
 }
