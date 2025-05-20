@@ -21,9 +21,16 @@ class UserProfileType extends AbstractType
                 'label' => 'Nom',
             ])
             ->add('avatar', FileType::class, [
-                'label' => 'Photo de profil',
-                'mapped' => false, // Important pour les fichiers
+                'label' => 'Photo de profil (JPG, PNG, max 2Mo)',
+                'mapped' => false, // très important
                 'required' => false,
+                'constraints' => [
+                    new File([
+                        'maxSize' => '2M',
+                        'mimeTypes' => ['image/jpeg', 'image/png'],
+                        'mimeTypesMessage' => 'Formats autorisés : JPG, PNG',
+                    ]),
+                ],
             ])
         ;
     }
