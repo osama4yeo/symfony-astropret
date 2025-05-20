@@ -6,9 +6,17 @@
 {% block body %}
     <h1>Liste du Matériel Disponible</h1>
 
-    {# ... (affichage des messages flash, etc.) ... #}
+    {# Inclusion des messages flash si tu en as #}
+    {% include 'partials/_flash_messages.html.twig' ignore missing %} {# 'ignore missing' évite une erreur si le partial n'existe pas #}
 
-    <table class="table">
+    {# Optionnel : Lien pour déclencher la mise à jour manuelle des statuts #}
+    {# <div class="mb-3">
+        <form method="post" action="{{ path('app_materiel_update_status') }}" style="display: inline;">
+            <button type="submit" class="btn btn-warning">Vérifier/MAJ Statuts Matériels Terminés</button>
+        </form>
+    </div> #}
+
+    <table class="table table-striped"> {# Ajout de table-striped pour un meilleur style si tu utilises Bootstrap #}
         <thead>
             <tr>
                 <th>Nom</th>
@@ -21,29 +29,29 @@
             <tr>
                 <td>{{ materiel.nom }}</td>
                 <td>
-                    <span class="badge bg-{{ materiel.etat == 'libre' ? 'success' : 'warning' }}">
+                    {# Utilise la constante pour une meilleure robustesse, et des classes CSS plus spécifiques #}
+                    {% set etat_class = materiel.etat == constant('App\\Entity\\Materiel::ETAT_LIBRE') ? 'success' : (materiel.etat == constant('App\\Entity\\Materiel::ETAT_LOUE') ? 'warning' : 'secondary') %}
+                    <span class="badge bg-{{ etat_class }}">
                         {{ materiel.etat | capitalize }}
                     </span>
                 </td>
                 <td>
-                    {# Lien pour voir les détails (si tu as la route 'app_materiel_show') #}
-                    <a href="{{ path('app_materiel_show', {'id': materiel.id}) }}" class="btn btn-sm btn-info">Voir</a>
-
-                    {# === LE LIEN IMPORTANT === #}
-                    {# On ne l'affiche que si le matériel est libre #}
-                    {% if materiel.etat == 'libre' %}
+                    {# LE LIEN POUR LOUER #}
+                    {# On ne l'affiche que si le matériel est libre, en utilisant la constante #}
+                    {% if materiel.etat == constant('App\\Entity\\Materiel::ETAT_LIBRE') %}
                         <a href="{{ path('reservation_new', {'materielId': materiel.id}) }}" class="btn btn-sm btn-primary">
                             Louer
                         </a>
                     {% else %}
-                         <span class="text-muted">Indisponible</span>
+                         <span class="text-muted fst-italic">Indisponible</span> {# Un peu plus de style pour 'Indisponible' #}
                     {% endif %}
-                     {# ... (autres actions comme éditer/supprimer si nécessaire) ... #}
+                     {# ... (tu pourrais ajouter d'autres actions ici plus tard comme éditer/supprimer le matériel lui-même, si c'est une fonctionnalité admin) ... #}
                 </td>
             </tr>
         {% else %}
             <tr>
-                <td colspan="3">Aucun matériel trouvé.</td>
+                {# Ajuste le colspan si tu ajoutes/supprimes des colonnes #}
+                <td colspan="3" class="text-center">Aucun matériel trouvé.</td>
             </tr>
         {% endfor %}
         </tbody>
