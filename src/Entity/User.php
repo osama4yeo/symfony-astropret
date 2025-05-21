@@ -50,6 +50,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'date_immutable', nullable: true)] // Exemple: Date de naissance
     private ?\DateTimeImmutable $dateNaissance = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $avatar = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -163,6 +166,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setDateNaissance(?\DateTimeImmutable $dateNaissance): static
     {
         $this->dateNaissance = $dateNaissance;
+        return $this;
+    }
+
+    public function getAvatar(): ?string
+    {
+        return $this->avatar;
+    }
+
+    public function setAvatar(?string $avatar): static
+    {
+        $this->avatar = $avatar;
         return $this;
     }
 }
