@@ -2,23 +2,29 @@
 
 {% block title %}Trombinoscope{% endblock %}
 
-{% block body %}
+{# Changement du nom du bloc ici #}
+{% block body_content %}
     <h1>Trombinoscope</h1>
-    <a href="{{ path('user_profile') }}" class="btn btn-success" style="margin-bottom: 20px;">Modifier Mon Profil</a>
+    {# Assure-toi que la route 'user_profile' existe et que l'utilisateur est connecté pour ce lien #}
+    {% if app.user %}
+        <a href="{{ path('user_profile') }}" class="btn btn-success" style="margin-bottom: 20px;">Modifier Mon Profil</a>
+    {% endif %}
+
     <div class="row">
-        {% for user in users %}
+        {% for user_item in users %} {# J'ai renommé la variable de boucle pour éviter la confusion avec 'user' de app.user #}
             <div class="col-md-3" style="margin-bottom: 20px;">
                 <div class="card">
-
-                    <!-- Utilisation d'une image par défaut pour l'avatar -->
-                    {% if user.avatar %}
-                        <img src="{{ asset('uploads/avatars/' ~ user.avatar) }}" ...>
+                    {% if user_item.avatar %}
+                        {# Assure-toi que le chemin 'uploads/avatars/' est correct et que user_item.avatar contient juste le nom du fichier #}
+                        <img src="{{ asset('uploads/avatars/' ~ user_item.avatar) }}" class="card-img-top avatar-img" alt="Avatar de {{ user_item.prenom }}">
                     {% else %}
-                        <img src="{{ asset('images/default-avatar.webp') }}" class="avatar-img" alt="Avatar par défaut">
+                        <img src="{{ asset('images/default-avatar.webp') }}" class="card-img-top avatar-img" alt="Avatar par défaut">
                     {% endif %}
 
                     <div class="card-body">
-                        <h5 class="card-title">{{ user.prenom }} {{ user.nom }} {{ user.email }}</h5>
+                        {# Utilise les propriétés prenom et nom si elles existent sur ton entité User #}
+                        <h5 class="card-title">{{ user_item.prenom }} {{ user_item.nom }}</h5>
+                        <p class="card-text"><small>{{ user_item.email }}</small></p>
                         {# autres infos pour plus tard... #}
                     </div>
                 </div>
@@ -27,10 +33,10 @@
             <p>Aucun utilisateur trouvé.</p>
         {% endfor %}
     </div>
-{% endblock %}
+{% endblock body_content %} {# Nom du bloc mis à jour ici aussi #}
 
 {% block stylesheets %}
-    {{ parent() }}
+    {{ parent() }} {# Pour inclure les styles de base.html.twig #}
     <style>
         .card {
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -40,12 +46,15 @@
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
         }
         .avatar-img {
-        width: 150px;
-        height: 150px;
-        object-fit: cover;
-        border-radius: 50%;
-        margin: 0 auto;
-        display: block;
-    }
+            width: 100%; /* Pour qu'elle prenne la largeur de la card-img-top */
+            height: 200px; /* Hauteur fixe pour l'uniformité, ajuste selon tes besoins */
+            object-fit: cover; /* S'assure que l'image couvre sans se déformer */
+            /* border-radius: 50%; Si tu veux des avatars ronds même dans les cartes */
+            /* margin: 0 auto; */
+            /* display: block; */
+        }
+        .card-body {
+            text-align: center; /* Pour centrer le texte dans la carte */
+        }
     </style>
 {% endblock %}

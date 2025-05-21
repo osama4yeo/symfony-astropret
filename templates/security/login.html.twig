@@ -1,37 +1,56 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Log in!{% endblock %}
+{% block title %}Connexion{% endblock %} {# Titre en français #}
 
-{% block body %}
-<form method="post">
-    {% if error %}
-        <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-    {% endif %}
+{# Changement du nom du bloc ici pour correspondre à base.html.twig #}
+{% block body_content %}
+<div class="container mt-5"> {# Ajout d'un container pour le centrage et les marges, si tu utilises Bootstrap #}
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <form method="post">
+                {% if error %}
+                    <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                {% endif %}
 
-    {% if app.user %}
-        <div class="mb-3">
-            You are logged in as {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">Logout</a>
+                {% if app.user %}
+                    <div class="mb-3 alert alert-info"> {# Ajout de la classe alert alert-info pour le style #}
+                        Vous êtes connecté en tant que {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">Déconnexion</a>
+                    </div>
+                {% endif %}
+
+                <h1 class="h3 mb-4 font-weight-normal text-center">Veuillez vous connecter</h1> {# Titre en français et centré #}
+
+                {# Utilisation des form-floating de Bootstrap pour un meilleur rendu #}
+                <div class="form-floating mb-3">
+                    <input type="email" value="{{ last_username }}" name="email" id="inputEmail" class="form-control" placeholder="name@example.com" autocomplete="email" required autofocus>
+                    <label for="inputEmail">Adresse Email</label> {# Label en français #}
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="password" name="password" id="inputPassword" class="form-control" placeholder="Mot de passe" autocomplete="current-password" required>
+                    <label for="inputPassword">Mot de passe</label> {# Label en français #}
+                </div>
+
+                <input type="hidden" name="_csrf_token"
+                       value="{{ csrf_token('authenticate') }}"
+                >
+
+                {# "Se souvenir de moi" - Décommente si tu as activé 'remember_me' dans security.yaml #}
+                <div class="checkbox mb-3">
+                    <label>
+                        <input type="checkbox" name="_remember_me" id="remember_me"> Se souvenir de moi {# Ajout d'un id pour le label #}
+                    </label>
+                </div>
+
+                <button class="btn btn-lg btn-primary w-100" type="submit">
+                    Se connecter {# Texte du bouton en français #}
+                </button>
+
+                <p class="text-center mt-3">
+                    Pas encore de compte ? <a href="{{ path('app_register') }}">Créer un compte</a>
+                </p>
+            </form>
         </div>
-    {% endif %}
-
-    <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
-    <label for="inputEmail">Email</label>
-    <input type="email" value="{{ last_username }}" name="email" id="inputEmail" class="form-control" autocomplete="email" required autofocus>
-    <label for="inputPassword">Password</label>
-    <input type="password" name="password" id="inputPassword" class="form-control" autocomplete="current-password" required>
-
-    <input type="hidden" name="_csrf_token"
-           value="{{ csrf_token('authenticate') }}"
-    >
-
-    <div class="checkbox mb-3">
-        <label>
-            <input type="checkbox" name="_remember_me"> Remember me
-        </label>
     </div>
-
-    <button class="btn btn-lg btn-primary" type="submit">
-        Sign in
-    </button>
-</form>
-{% endblock %}
+</div>
+{% endblock body_content %} {# Nom du bloc mis à jour ici aussi #}

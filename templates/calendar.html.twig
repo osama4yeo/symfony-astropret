@@ -4,18 +4,23 @@
     Calendrier des événements
 {% endblock %}
 
-{% block body %}
+{# Changement du nom du bloc ici #}
+{% block body_content %}
 
     {% set google_calendar_url = 'https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=Europe%2FParis&showPrint=0&src=YXN0cm9wcmV0QGdtYWlsLmNvbQ&src=ZnIuZnJlbmNoI2hvbGlkYXlAZ3JvdXAudi5jYWxlbmRhci5nb29nbGUuY29t&color=%23039BE5&color=%230B8043' %}
 
     <h1>Calendrier</h1>
 
-    <iframe 
+    <iframe
         src="{{ google_calendar_url }}"
-        style="border:solid 1px #777;" 
-        width="100%" 
-        height="600" 
-        frameborder="0" 
+        style="border:solid 1px #777;"
+        width="100%"
+        height="600"
+        frameborder="0"
         scrolling="no">
     </iframe>
-{% endblock %}
+{% endblock body_content %} {# Nom du bloc mis à jour ici aussi #}
+
+{# Si cette page a besoin des JS/CSS de FullCalendar qui sont dans base.html.twig,
+   tu n'as rien de plus à faire ici s'ils sont dans javascripts_page_specific.
+   Si tu les avais enlevés de base.html.twig, tu les rajouterais ici. #}

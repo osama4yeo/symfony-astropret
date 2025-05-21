@@ -2,7 +2,8 @@
 
 {% block title %}Mon profil{% endblock %}
 
-{% block body %}
+{# Changement du nom du bloc ici #}
+{% block body_content %}
     <h1>Mon profil</h1>
 
     {% if user %}
@@ -24,11 +25,15 @@
     {% else %}
         <p>Vous devez être connecté pour voir cette page.</p>
 
+        <a href="{{ path('app_login') }}" class="btn btn-outline-primary mb-3">
+            Se connecter
+        </a>
+
         <a href="{{ path('app_register') }}" class="btn btn-outline-primary mb-3">
             Créer un nouveau compte
         </a>
     {% endif %}
-{% endblock %}
+{% endblock body_content %} {# Nom du bloc mis à jour ici aussi #}
 
 {% block stylesheets %}
     {{ parent() }}
