@@ -6,9 +6,6 @@
 {% block body_content %}
     <h1>Trombinoscope</h1>
     {# Assure-toi que la route 'user_profile' existe et que l'utilisateur est connecté pour ce lien #}
-    {% if app.user %}
-        <a href="{{ path('user_profile') }}" class="btn btn-success" style="margin-bottom: 20px;">Modifier Mon Profil</a>
-    {% endif %}
 
     <div class="row">
         {% for user_item in users %} {# J'ai renommé la variable de boucle pour éviter la confusion avec 'user' de app.user #}
@@ -18,7 +15,7 @@
                         {# Assure-toi que le chemin 'uploads/avatars/' est correct et que user_item.avatar contient juste le nom du fichier #}
                         <img src="{{ asset('uploads/avatars/' ~ user_item.avatar) }}" class="card-img-top avatar-img" alt="Avatar de {{ user_item.prenom }}">
                     {% else %}
-                        <img src="{{ asset('images/default-avatar.webp') }}" class="card-img-top avatar-img" alt="Avatar par défaut">
+                        <img src="{{ asset('images/default-avatar-icon-of-social-media-user-vector.jpg') }}" class="card-img-top avatar-img" alt="Avatar par défaut">
                     {% endif %}
 
                     <div class="card-body">
