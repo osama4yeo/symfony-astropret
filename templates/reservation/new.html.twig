@@ -3,43 +3,41 @@
 
 {% block title %}Nouvelle Réservation{% endblock %}
 
-{% block body %}
+{# Changement du nom du bloc ici pour correspondre à base.html.twig #}
+{% block body_content %}
     <h1>
         Réserver du matériel
         {# Affiche le nom du matériel si pré-sélectionné #}
         {% if materielPredefini %} : {{ materielPredefini.nom }} {% endif %}
     </h1>
 
-    {% include 'partials/_flash_messages.html.twig' %} {# Si tu utilises ce partial #}
+    {# Inclusion des messages flash #}
+    {% include 'partials/_flash_messages.html.twig' ignore missing %}
 
     {{ form_start(form) }}
 
-        {# Si le matériel est prédéfini, on peut choisir de cacher le champ
-           ou de le rendre readonly. Sinon, on l'affiche normalement. #}
+        {# Logique pour le champ matériel #}
         {% if materielPredefini %}
-            {# Option 1: Afficher le champ mais désactivé #}
-            {# {{ form_row(form.materiel, {'attr': {'disabled': 'disabled'}}) }} #}
-            {# Attention: un champ désactivé n'envoie pas sa valeur. Il faut soit le pré-remplir
-               dans le contrôleur (comme on l'a fait), soit utiliser un champ caché en plus.
-               Le plus simple est de le laisser modifiable ou de gérer via le contrôleur. #}
-
-             {# Option 2: Afficher juste le nom et laisser le champ EntityType caché ou non rendu s'il est bien setté #}
-              {# <p>Vous réservez : <strong>{{ materielPredefini.nom }}</strong></p> #}
-              {# Ne pas faire form_row(form.materiel) dans ce cas SI l'objet est bien pré-rempli #}
-
-             {# Option la plus simple pour commencer : Laisser le champ tel quel, il sera pré-sélectionné #}
-              {{ form_row(form.materiel) }}
-
+            {# Si le matériel est prédéfini (l'utilisateur a cliqué "Louer" sur un matériel spécifique),
+               on peut afficher le champ matériel. Il sera pré-sélectionné.
+               L'utilisateur pourrait techniquement encore le changer s'il le souhaite,
+               sauf si tu le rends 'disabled' (mais attention, un champ désactivé n'envoie pas sa valeur).
+               La validation dans le contrôleur s'assurera que le matériel final est toujours valide. #}
+            {{ form_row(form.materiel) }}
         {% else %}
-            {# Si aucun matériel n'est prédéfini, affiche le champ normalement #}
+            {# Si aucun matériel n'est prédéfini (l'utilisateur est venu directement sur la page /reservations/new),
+               il doit pouvoir choisir le matériel. #}
             {{ form_row(form.materiel) }}
         {% endif %}
 
-        {# Affiche les autres champs #}
+        {# Affiche les autres champs du formulaire #}
         {{ form_row(form.dateDebut) }}
         {{ form_row(form.dateFin) }}
         {{ form_row(form.latitude) }}
         {{ form_row(form.longitude) }}
+        {# Si tu as d'autres champs dans ReservationFormType, ajoute-les ici #}
+        {# Par exemple, si tu avais un champ pour le nom du locataire s'il n'est pas l'utilisateur connecté #}
+        {# {{ form_row(form.nomLocataire) }} #}
 
         <button type="submit" class="btn btn-primary mt-3">Confirmer la réservation</button>
 
@@ -47,8 +45,10 @@
 
     <p class="mt-3">
         <a href="{{ path('app_materiel_index') }}">Retour à la liste du matériel</a>
-        {# Ou lien vers l'index des réservations #}
-        {# <a href="{{ path('reservation_index') }}">Voir mes réservations</a> #}
+        {# Optionnel: lien vers la liste des réservations (si l'utilisateur y a accès) #}
+        {# {% if is_granted('ROLE_ADMIN') or is_granted('VIEW_OWN_RESERVATIONS') %} #} {# Exemple de condition #}
+        {#    | <a href="{{ path('reservation_index') }}">Voir mes réservations</a> #}
+        {# {% endif %} #}
     </p>
 
-{% endblock %}
+{% endblock body_content %} {# Nom du bloc mis à jour ici aussi #}

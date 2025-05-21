@@ -3,11 +3,12 @@
 
 {% block title %}Liste du Matériel{% endblock %}
 
-{% block body %}
+{# Changement du nom du bloc ici pour correspondre à base.html.twig #}
+{% block body_content %}
     <h1>Liste du Matériel Disponible</h1>
 
     {# Inclusion des messages flash si tu en as #}
-    {% include 'partials/_flash_messages.html.twig' ignore missing %} {# 'ignore missing' évite une erreur si le partial n'existe pas #}
+    {% include 'partials/_flash_messages.html.twig' ignore missing %}
 
     {# Optionnel : Lien pour déclencher la mise à jour manuelle des statuts #}
     {# <div class="mb-3">
@@ -16,7 +17,7 @@
         </form>
     </div> #}
 
-    <table class="table table-striped"> {# Ajout de table-striped pour un meilleur style si tu utilises Bootstrap #}
+    <table class="table table-striped">
         <thead>
             <tr>
                 <th>Nom</th>
@@ -25,35 +26,30 @@
             </tr>
         </thead>
         <tbody>
-        {% for materiel in materiels %}
+        {% for materiel_item in materiels %} {# J'ai renommé 'materiel' en 'materiel_item' pour éviter confusion avec une variable globale potentielle #}
             <tr>
-                <td>{{ materiel.nom }}</td>
+                <td>{{ materiel_item.nom }}</td>
                 <td>
-                    {# Utilise la constante pour une meilleure robustesse, et des classes CSS plus spécifiques #}
-                    {% set etat_class = materiel.etat == constant('App\\Entity\\Materiel::ETAT_LIBRE') ? 'success' : (materiel.etat == constant('App\\Entity\\Materiel::ETAT_LOUE') ? 'warning' : 'secondary') %}
+                    {% set etat_class = materiel_item.etat == constant('App\\Entity\\Materiel::ETAT_LIBRE') ? 'success' : (materiel_item.etat == constant('App\\Entity\\Materiel::ETAT_LOUE') ? 'warning' : 'secondary') %}
                     <span class="badge bg-{{ etat_class }}">
-                        {{ materiel.etat | capitalize }}
+                        {{ materiel_item.etat | capitalize }}
                     </span>
                 </td>
                 <td>
-                    {# LE LIEN POUR LOUER #}
-                    {# On ne l'affiche que si le matériel est libre, en utilisant la constante #}
-                    {% if materiel.etat == constant('App\\Entity\\Materiel::ETAT_LIBRE') %}
-                        <a href="{{ path('reservation_new', {'materielId': materiel.id}) }}" class="btn btn-sm btn-primary">
+                    {% if materiel_item.etat == constant('App\\Entity\\Materiel::ETAT_LIBRE') %}
+                        <a href="{{ path('reservation_new', {'materielId': materiel_item.id}) }}" class="btn btn-sm btn-primary">
                             Louer
                         </a>
                     {% else %}
-                         <span class="text-muted fst-italic">Indisponible</span> {# Un peu plus de style pour 'Indisponible' #}
+                         <span class="text-muted fst-italic">Indisponible</span>
                     {% endif %}
-                     {# ... (tu pourrais ajouter d'autres actions ici plus tard comme éditer/supprimer le matériel lui-même, si c'est une fonctionnalité admin) ... #}
                 </td>
             </tr>
         {% else %}
             <tr>
-                {# Ajuste le colspan si tu ajoutes/supprimes des colonnes #}
                 <td colspan="3" class="text-center">Aucun matériel trouvé.</td>
             </tr>
         {% endfor %}
         </tbody>
     </table>
-{% endblock %}
+{% endblock body_content %} {# Nom du bloc mis à jour ici aussi #}
