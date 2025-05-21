@@ -1,34 +1,79 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Inscription{% endblock %} {# Titre en français #}
+{% block title %}Inscription{% endblock %}
 
-{# Changement du nom du bloc ici pour correspondre à base.html.twig #}
 {% block body_content %}
-    <div class="container mt-5"> {# Ajout d'un container pour le centrage et marges, si tu utilises Bootstrap #}
+    <div class="container mt-5">
         <div class="row justify-content-center">
-            <div class="col-md-6"> {# Colonne un peu plus large pour le formulaire d'inscription #}
-                <h1 class="mb-4 text-center">Créer un compte</h1> {# Titre en français et centré #}
-
-                {# Affiche les erreurs globales du formulaire s'il y en a #}
-                {{ form_errors(registrationForm) }}
+            <div class="col-md-6">
+                <h1 class="mb-4 text-center">Créer un compte</h1>
 
                 {{ form_start(registrationForm) }}
-                    {# Les labels pour ces champs devraient être définis dans RegistrationFormType.php #}
-                    {{ form_row(registrationForm.email) }}
-                    {{ form_row(registrationForm.prenom) }}
-                    {{ form_row(registrationForm.nom) }}
-                    {{ form_row(registrationForm.telephone) }}
-                    {{ form_row(registrationForm.dateNaissance) }}
+                    {# Affiche les erreurs globales du formulaire s'il y en a #}
+                    {{ form_errors(registrationForm) }}
 
-                    {# Le champ plainPassword est un RepeatedType, form_row le gère bien. #}
-                    {# Le label 'Password' ici surcharge le label 'Mot de passe' que tu as défini dans le FormType #}
-                    {# Si tu veux les labels définis dans le FormType, enlève l'option label ici #}
-                    {{ form_row(registrationForm.plainPassword) }} {# Enlève , { label: 'Password' } si tu veux le label du FormType #}
+                    {# Champ Email avec Floating Label #}
+                    <div class="form-floating mb-3">
+                        {{ form_widget(registrationForm.email, {'attr': {'class': 'form-control', 'placeholder': 'exemple@domaine.com'}}) }}
+                        {{ form_label(registrationForm.email) }}
+                        {{ form_errors(registrationForm.email) }}
+                    </div>
 
-                    {# Le label pour agreeTerms devrait aussi être défini dans RegistrationFormType.php #}
-                    {{ form_row(registrationForm.agreeTerms) }}
+                    {# Champ Prénom avec Floating Label #}
+                    <div class="form-floating mb-3">
+                        {{ form_widget(registrationForm.prenom, {'attr': {'class': 'form-control', 'placeholder': 'Votre prénom'}}) }}
+                        {{ form_label(registrationForm.prenom) }}
+                        {{ form_errors(registrationForm.prenom) }}
+                    </div>
 
-                    <button type="submit" class="btn btn-primary w-100 mt-3">S'inscrire</button> {# Bouton en français et pleine largeur #}
+                    {# Champ Nom avec Floating Label #}
+                    <div class="form-floating mb-3">
+                        {{ form_widget(registrationForm.nom, {'attr': {'class': 'form-control', 'placeholder': 'Votre nom de famille'}}) }}
+                        {{ form_label(registrationForm.nom) }}
+                        {{ form_errors(registrationForm.nom) }}
+                    </div>
+
+                    {# Champ Téléphone avec Floating Label #}
+                    <div class="form-floating mb-3">
+                        {{ form_widget(registrationForm.telephone, {'attr': {'class': 'form-control', 'placeholder': 'Ex: 0612345678'}}) }}
+                        {{ form_label(registrationForm.telephone) }}
+                        {{ form_errors(registrationForm.telephone) }}
+                    </div>
+
+                    {# Champ Date de Naissance avec Floating Label #}
+                    {# Pour DateType avec widget 'single_text', le placeholder natif du navigateur s'affichera #}
+                    {# Il est important que le label soit APRES le widget pour les floating labels #}
+                    <div class="form-floating mb-3">
+                        {{ form_widget(registrationForm.dateNaissance, {'attr': {'class': 'form-control'}}) }} {# Pas besoin de placeholder ici, le type="date" s'en charge #}
+                        {{ form_label(registrationForm.dateNaissance) }}
+                        {{ form_errors(registrationForm.dateNaissance) }}
+                    </div>
+
+                    {# Champ Mot de passe (RepeatedType) - Un peu plus complexe pour les floating labels #}
+                    {# plainPassword est un RepeatedType, il a deux enfants : 'first' et 'second' #}
+                    <div class="form-floating mb-3">
+                        {{ form_widget(registrationForm.plainPassword.first, {'attr': {'class': 'form-control', 'placeholder': 'Mot de passe'}}) }}
+                        {{ form_label(registrationForm.plainPassword.first) }}
+                        {{ form_errors(registrationForm.plainPassword.first) }}
+                    </div>
+                    <div class="form-floating mb-3">
+                        {{ form_widget(registrationForm.plainPassword.second, {'attr': {'class': 'form-control', 'placeholder': 'Confirmer le mot de passe'}}) }}
+                        {{ form_label(registrationForm.plainPassword.second) }}
+                        {{ form_errors(registrationForm.plainPassword.second) }}
+                    </div>
+                    {# Affiche les erreurs globales du champ RepeatedType (ex: si les mots de passe ne correspondent pas) #}
+                    {{ form_errors(registrationForm.plainPassword) }}
+
+
+                    {# Champ agreeTerms (CheckboxType) - Les floating labels ne s'appliquent pas bien aux checkboxes de la même manière #}
+                    {# On va utiliser la structure standard de Bootstrap pour les checkboxes #}
+                    <div class="mb-3 form-check">
+                        {{ form_widget(registrationForm.agreeTerms, {'attr': {'class': 'form-check-input'}}) }}
+                        {{ form_label(registrationForm.agreeTerms, null, {'label_attr': {'class': 'form-check-label'}}) }}
+                        {{ form_errors(registrationForm.agreeTerms) }}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 mt-3">S'inscrire</button>
                 {{ form_end(registrationForm) }}
 
                 <p class="text-center mt-3">
@@ -37,4 +82,4 @@
             </div>
         </div>
     </div>
-{% endblock body_content %} {# Nom du bloc mis à jour ici aussi #}
+{% endblock body_content %}
