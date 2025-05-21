@@ -42,10 +42,7 @@
                                 <a class="nav-link" href="{{ path('user_trombinoscope') }}">Trombinoscope</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ path('app_materiel_index') }}">Matériel</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ path('app_location_dispatch') }}">Location</a>
+                                <a class="nav-link" href="{{ path('app_materiel_index') }}">Location</a>
                             </li>
                             {# Correction du li vide et ajustement du lien profil #}
                             {% if app.user %} {# Le lien Profil n'a de sens que si l'utilisateur est connecté #}
