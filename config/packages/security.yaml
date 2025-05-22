@@ -71,7 +71,7 @@ security:
         # Assure-toi que les noms de routes 'app_login' et 'app_register' correspondent aux tiens
         - { path: ^/login$, roles: PUBLIC_ACCESS } # Ou IS_AUTHENTICATED_ANONYMOUSLY
         - { path: ^/register$, roles: PUBLIC_ACCESS } # Si tu as une page d'inscription
-
+        - { path: ^/trombinoscope, roles: PUBLIC_ACCESS }
         # Exemples de routes protégées (adapte les chemins et les rôles) :
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
