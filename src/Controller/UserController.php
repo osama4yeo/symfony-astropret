@@ -9,6 +9,8 @@ use Symfony\Component\Routing\Annotation\Route;
 use App\Form\ProfilType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\String\Slugger\SluggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 
 class UserController extends AbstractController
@@ -41,7 +43,7 @@ class UserController extends AbstractController
 
     #[IsGranted('ROLE_USER')]
     #[Route('/profil/modifier', name: 'user_profile_edit')]
-    public function editProfil(Request $request, EntityManagerInterface $em): Response
+    public function editProfil(Request $request, EntityManagerInterface $em, SluggerInterface $slugger): Response
     {
         $user = $this->getUser();
 
@@ -49,12 +51,35 @@ class UserController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $avatarFile = $form->get('avatar')->getData();
+
+
+            if ($avatarFile) {
+                $originalFilename = pathinfo($avatarFile->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $slugger->slug($originalFilename);
+                $newFilename = $safeFilename . '-' . uniqid() . '.' . $avatarFile->guessExtension();
+
+                try {
+                    $avatarFile->move(
+                        $this->getParameter('avatars_directory'),
+                        $newFilename
+                    );
+                    $this->addFlash('success', 'Image enregistrée avec succès : ' . $newFilename);
+
+                } catch (FileException $e) {
+                    $this->addFlash('danger', 'Erreur lors de l\'upload de l\'avatar.');
+                }
+
+                $user->setAvatar($newFilename);
+            }
+
             $em->flush();
-            $this->addFlash('success', 'Votre profil a bien été mis à jour.');
+            $this->addFlash('success', 'Profil mis à jour avec succès.');
+
             return $this->redirectToRoute('user_profile');
         }
 
-        return $this->render('edit.html.twig', [
+        return $this->render('edit_profile.html.twig', [
             'form' => $form->createView(),
         ]);
     }

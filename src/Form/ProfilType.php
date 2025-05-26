@@ -6,6 +6,8 @@ use App\Entity\User;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
+use Symfony\Component\Validator\Constraints\File;
 
 class ProfilType extends AbstractType
 {
@@ -19,7 +21,22 @@ class ProfilType extends AbstractType
             ->add('dateNaissance', null, [
                 'widget' => 'single_text',
             ])
-            ->add('avatar')
+            ->add('avatar', FileType::class, [
+                'label' => 'Choisir un nouvel avatar',
+                'mapped' => false,
+                'required' => false,
+                'constraints' => [
+                    new File([
+                        'maxSize' => '10M',
+                        'mimeTypes' => [
+                            'image/jpeg',
+                            'image/png',
+                            'image/webp',
+                        ],
+                        'mimeTypesMessage' => 'Merci de choisir une image JPG, PNG ou WEBP valide.',
+                    ])
+                ],
+            ])
         ;
     }
 
