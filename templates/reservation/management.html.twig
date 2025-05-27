@@ -1,0 +1,110 @@
+{# templates/admin/reservation/management.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des Prêts et Réservations{% endblock %}
+
+{% block body_content %}
+    <div class="container mt-4">
+        <h1 class="mb-4">Gestion des Prêts et Réservations</h1>
+
+        {# Inclusion des messages flash (pour les confirmations de suppression, modification, etc.) #}
+        {% include 'partials/_flash_messages.html.twig' ignore missing %}
+
+        {% if reservations is not empty %}
+            <div class="table-responsive"> {# Pour une meilleure gestion sur petits écrans #}
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark"> {# En-tête de tableau plus visible #}
+                        <tr>
+                            <th>ID Rés.</th>
+                            <th>Matériel</th>
+                            <th>ID Utilisateur</th> {# Si tu as lié la réservation à un User #}
+                            {# <th>Nom Locataire (Texte)</th> Si tu as un champ texte séparé #}
+                            <th>Début du Prêt</th>
+                            <th>Fin du Prêt</th>
+                            <th>État Actuel du Matériel</th>
+                            <th class="text-end">Actions</th> {# Alignement à droite pour les actions #}
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for reservation in reservations %}
+                        <tr>
+                            <td>#{{ reservation.id }}</td>
+                            <td>
+                                {% if reservation.materiel %}
+                                    {{ reservation.materiel.nom }}
+                                    <small class="d-block text-muted">ID Mat: {{ reservation.materiel.id }}</small>
+                                {% else %}
+                                    <span class="text-danger">Matériel non défini</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if reservation.user %} {# Supposant que tu as une propriété 'user' sur l'entité Reservation #}
+                                    {{ reservation.user.email }}
+                                    {# <small class="d-block text-muted">ID User: {{ reservation.user.id }}</small> #}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            {# Si tu as un champ nomLocataire distinct :
+                            <td>{{ reservation.nomLocataire | default('N/A') }}</td>
+                            #}
+                            <td>{{ reservation.dateDebut ? reservation.dateDebut|date('d/m/Y H:i') : 'Non défini' }}</td>
+                            <td>{{ reservation.dateFin ? reservation.dateFin|date('d/m/Y H:i') : 'Non défini' }}</td>
+                            <td>
+                                {% if reservation.materiel %}
+                                    {% set etat_class = reservation.materiel.etat == constant('App\\Entity\\Materiel::ETAT_LIBRE') ? 'success' : (reservation.materiel.etat == constant('App\\Entity\\Materiel::ETAT_LOUE') ? 'warning' : 'secondary') %}
+                                    <span class="badge bg-{{ etat_class }}">
+                                        {{ reservation.materiel.etat | capitalize }}
+                                    </span>
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ path('admin_reservation_edit', {'id': reservation.id}) }}" class="btn btn-sm btn-primary me-1" title="Modifier cette réservation">
+                                    <i class="bi bi-pencil-square"></i> Modifier {# Utilise une icône si tu as Bootstrap Icons #}
+                                </a>
+                                {# Formulaire pour la suppression pour utiliser la méthode POST et la protection CSRF #}
+                                <form method="post" action="{{ path('admin_reservation_delete', {'id': reservation.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer la réservation #{{ reservation.id }} pour le matériel \'{{ reservation.materiel ? reservation.materiel.nom : '' }}\' ?');" style="display: inline-block;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ reservation.id) }}">
+                                    <button class="btn btn-sm btn-danger" title="Supprimer cette réservation">
+                                        <i class="bi bi-trash"></i> Supprimer {# Utilise une icône #}
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info" role="alert">
+                Aucune réservation enregistrée pour le moment.
+            </div>
+        {% endif %}
+
+        {# Optionnel: Lien pour créer une nouvelle réservation (si l'admin peut aussi en créer depuis ici) #}
+        {# <p class="mt-4">
+            <a href="{{ path('reservation_new') }}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Créer une nouvelle réservation
+            </a>
+        </p> #}
+    </div>
+{% endblock body_content %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {# Si tu utilises Bootstrap Icons (facultatif) #}
+    {# <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"> #}
+    <style>
+        .table th, .table td {
+            vertical-align: middle; /* Pour un meilleur alignement vertical dans les cellules */
+        }
+        .table th.text-end, .table td.text-end {
+            text-align: right;
+        }
+        .btn-sm i { /* Ajustement pour les icônes dans les petits boutons */
+            margin-right: 0.25rem;
+        }
+    </style>
+{% endblock %}

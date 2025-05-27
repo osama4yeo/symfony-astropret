@@ -3,16 +3,17 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection; // <--- AJOUTÉ
+use Doctrine\Common\Collections\Collection;    // <--- AJOUTÉ
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface; // NÉCESSAIRE
-use Symfony\Component\Security\Core\User\UserInterface; // NÉCESSAIRE
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
 #[UniqueEntity(fields: ['email'], message: 'Il existe déjà un compte avec cet email')]
-// --- MODIFICATION 1: Implémenter les interfaces UserInterface et PasswordAuthenticatedUserInterface ---
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -20,38 +21,50 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?int $id = null;
 
-    // --- MODIFICATION 2: Augmenter la longueur pour l'email (standard) et ajouter des contraintes de validation ---
-    #[ORM\Column(length: 180, unique: true)] // La propriété unique:true est redondante avec #[UniqueEntity] mais ne fait pas de mal
+    #[ORM\Column(length: 180, unique: true)]
     #[Assert\NotBlank(message: "L'email ne peut pas être vide.")]
     #[Assert\Email(message: "L'email '{{ value }}' n'est pas une adresse email valide.")]
     private ?string $email = null;
 
-    /**
-     * @var string The hashed password
-     */
-    #[ORM\Column(length: 255)] // La longueur de 255 est bien pour les mots de passe hachés
+    #[ORM\Column(length: 255)]
     private ?string $password = null;
 
-    // --- MODIFICATION 3: Spécifier le type JSON pour les rôles ---
-    #[ORM\Column(type: 'json')] // Les rôles sont stockés comme un tableau JSON
+    #[ORM\Column(type: 'json')]
     private array $roles = [];
 
-    #[ORM\Column(length: 100, nullable: true)] // Rendre nullable si ce n'est pas obligatoire à l'inscription
+    #[ORM\Column(length: 100, nullable: true)]
     #[Assert\Length(min: 2, max: 100, minMessage: "Le prénom doit comporter au moins 2 caractères.", maxMessage: "Le prénom ne peut pas dépasser 100 caractères.")]
-    private ?string $prenom = null; // Prénom
+    private ?string $prenom = null;
 
     #[ORM\Column(length: 100, nullable: true)]
     #[Assert\Length(min: 2, max: 100, minMessage: "Le nom doit comporter au moins 2 caractères.", maxMessage: "Le nom ne peut pas dépasser 100 caractères.")]
-    private ?string $nom = null;     // Nom de famille
+    private ?string $nom = null;
 
-    #[ORM\Column(length: 20, nullable: true)] // Exemple: Numéro de téléphone
+    #[ORM\Column(length: 20, nullable: true)]
     private ?string $telephone = null;
 
-    #[ORM\Column(type: 'date_immutable', nullable: true)] // Exemple: Date de naissance
+    #[ORM\Column(type: 'date_immutable', nullable: true)]
     private ?\DateTimeImmutable $dateNaissance = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $avatar = null;
+
+    // --- NOUVELLE PROPRIÉTÉ POUR LA RELATION INVERSE AVEC RESERVATION ---
+    /**
+     * @var Collection<int, Reservation>
+     */
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Reservation::class, orphanRemoval: false)] // orphanRemoval: false ou true selon ta logique
+    private Collection $reservations;
+    // --- FIN DE LA NOUVELLE PROPRIÉTÉ ---
+
+    public function __construct()
+    {
+        // Initialise la collection de réservations
+        $this->reservations = new ArrayCollection();
+    }
+
+    // ... (tous tes getters et setters existants pour id, email, password, roles, prenom, nom, telephone, dateNaissance, avatar) ...
+    // ... (méthodes getUserIdentifier, eraseCredentials) ...
 
     public function getId(): ?int
     {
@@ -69,26 +82,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    // --- MODIFICATION 4: Implémenter getUserIdentifier() (requise par UserInterface) ---
-    /**
-     * A visual identifier that represents this user.
-     *
-     * @see UserInterface
-     */
     public function getUserIdentifier(): string
     {
-        return (string) $this->email; // Ou $this->username si tu en avais un
+        return (string) $this->email;
     }
 
-    /**
-     * @see UserInterface
-     */
     public function getRoles(): array
     {
         $roles = $this->roles;
-        // Garantit que chaque utilisateur a au moins ROLE_USER
         $roles[] = 'ROLE_USER';
-
         return array_unique($roles);
     }
 
@@ -98,13 +100,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * @see PasswordAuthenticatedUserInterface
-     */
-    public function getPassword(): string // La méthode doit retourner string, pas ?string
+    public function getPassword(): string
     {
-        // Le mot de passe ne doit JAMAIS être null pour un utilisateur qui en a un.
-        // S'il est null en BDD, cela causerait une erreur ici, ce qui est bien.
         return (string) $this->password;
     }
 
@@ -114,15 +111,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    // --- MODIFICATION 5: Implémenter eraseCredentials() (requise par UserInterface) ---
-    /**
-     * @see UserInterface
-     */
     public function eraseCredentials(): void
     {
-        // Si tu stockes des données temporaires sensibles sur l'utilisateur (ex: un mot de passe en clair temporaire),
-        // efface-les ici. Pour la plupart des cas, cette méthode peut rester vide.
-        // $this->plainPassword = null;
     }
 
     public function getPrenom(): ?string
@@ -179,4 +169,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->avatar = $avatar;
         return $this;
     }
+
+    // --- GETTERS ET MÉTHODES ADD/REMOVE POUR LA PROPRIÉTÉ RESERVATIONS ---
+    /**
+     * @return Collection<int, Reservation>
+     */
+    public function getReservations(): Collection
+    {
+        return $this->reservations;
+    }
+
+    public function addReservation(Reservation $reservation): static
+    {
+        if (!$this->reservations->contains($reservation)) {
+            $this->reservations->add($reservation);
+            $reservation->setUser($this); // Met à jour le côté propriétaire de la relation
+        }
+        return $this;
+    }
+
+    public function removeReservation(Reservation $reservation): static
+    {
+        if ($this->reservations->removeElement($reservation)) {
+            // Important : Définit le côté propriétaire à null (sauf s'il a déjà été changé)
+            // pour maintenir la cohérence de la relation bidirectionnelle.
+            if ($reservation->getUser() === $this) {
+                $reservation->setUser(null);
+            }
+        }
+        return $this;
+    }
+    // --- FIN DES MÉTHODES POUR RESERVATIONS ---
 }

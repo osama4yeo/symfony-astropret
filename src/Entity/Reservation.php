@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Repository\ReservationRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use App\Entity\Materiel; // Assure-toi que ce use est présent
+use App\Entity\User;    // <--- AJOUTÉ : Use statement pour l'entité User
 
 #[ORM\Entity(repositoryClass: ReservationRepository::class)]
 class Reservation
@@ -14,20 +16,32 @@ class Reservation
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 7)]
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 7, nullable: true)]
     private ?string $latitude = null;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 7)]
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 7, nullable: true)]
     private ?string $longitude = null;
 
-    #[ORM\Column]
-    private ?\DateTimeImmutable $date_debut = null;
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)] // Rendre nullable si ce n'est pas toujours défini à la création
+    private ?\DateTimeImmutable $dateDebut = null;
 
-    #[ORM\Column]
-    private ?\DateTimeImmutable $date_fin = null;
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)] // Rendre nullable si ce n'est pas toujours défini à la création
+    private ?\DateTimeImmutable $dateFin = null;
 
-    #[ORM\ManyToOne(inversedBy: 'reservation')]
-    private ?materiel $materiel = null;
+    #[ORM\ManyToOne(targetEntity: Materiel::class, inversedBy: 'reservations')]
+    #[ORM\JoinColumn(nullable: false)] // Une réservation doit avoir un matériel
+    private ?Materiel $materiel = null;
+
+    // --- NOUVELLE PROPRIÉTÉ ET RELATION AVEC USER ---
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'reservations')] // 'reservations' sera la propriété Collection dans User
+    #[ORM\JoinColumn(nullable: true)] // Mettre à false si une réservation DOIT être liée à un utilisateur
+    private ?User $user = null;
+    // --- FIN DE LA NOUVELLE PROPRIÉTÉ ---
+
+    // Optionnel: si tu as un champ texte pour un nom de locataire non enregistré
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $nomLocataire = null;
+
 
     public function getId(): ?int
     {
@@ -39,10 +53,9 @@ class Reservation
         return $this->latitude;
     }
 
-    public function setLatitude(string $latitude): static
+    public function setLatitude(?string $latitude): static
     {
         $this->latitude = $latitude;
-
         return $this;
     }
 
@@ -51,46 +64,66 @@ class Reservation
         return $this->longitude;
     }
 
-    public function setLongitude(string $longitude): static
+    public function setLongitude(?string $longitude): static
     {
         $this->longitude = $longitude;
-
         return $this;
     }
 
     public function getDateDebut(): ?\DateTimeImmutable
     {
-        return $this->date_debut;
+        return $this->dateDebut;
     }
 
-    public function setDateDebut(\DateTimeImmutable $date_debut): static
+    public function setDateDebut(?\DateTimeImmutable $dateDebut): static
     {
-        $this->date_debut = $date_debut;
-
+        $this->dateDebut = $dateDebut;
         return $this;
     }
 
     public function getDateFin(): ?\DateTimeImmutable
     {
-        return $this->date_fin;
+        return $this->dateFin;
     }
 
-    public function setDateFin(\DateTimeImmutable $date_fin): static
+    public function setDateFin(?\DateTimeImmutable $dateFin): static
     {
-        $this->date_fin = $date_fin;
-
+        $this->dateFin = $dateFin;
         return $this;
     }
 
-    public function getMateriel(): ?materiel
+    public function getMateriel(): ?Materiel
     {
         return $this->materiel;
     }
 
-    public function setMateriel(?materiel $materiel): static
+    public function setMateriel(?Materiel $materiel): static
     {
         $this->materiel = $materiel;
+        return $this;
+    }
 
+    // --- GETTER ET SETTER POUR LA PROPRIÉTÉ USER ---
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    public function setUser(?User $user): static
+    {
+        $this->user = $user;
+        return $this;
+    }
+    // --- FIN GETTER ET SETTER USER ---
+
+    public function getNomLocataire(): ?string
+    {
+        return $this->nomLocataire;
+    }
+
+    public function setNomLocataire(?string $nomLocataire): static
+    {
+        $this->nomLocataire = $nomLocataire;
         return $this;
     }
 }

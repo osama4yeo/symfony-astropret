@@ -5,94 +5,109 @@ namespace App\Form;
 
 use App\Entity\Materiel;
 use App\Entity\Reservation;
-use App\Repository\MaterielRepository; // Important pour la requête personnalisée
-use Symfony\Bridge\Doctrine\Form\Type\EntityType; // Pour la liste de matériel
+use App\Entity\User; // Ajouté pour le champ User en mode admin
+use App\Repository\MaterielRepository;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\DateTimeType; // Pour les champs date/heure
-use Symfony\Component\Form\Extension\Core\Type\NumberType; // Pour latitude/longitude
+use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
+use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Validator\Constraints\GreaterThanOrEqual; // Pour la validation des dates
-use Symfony\Component\Validator\Constraints\NotNull; // Pour les champs requis
+use Symfony\Component\Validator\Constraints\GreaterThanOrEqual;
+use Symfony\Component\Validator\Constraints\NotNull;
 
 class ReservationType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $isAdminEdit = $options['is_admin_edit']; // Récupérer la valeur de l'option
+
         $builder
-            // Champ pour sélectionner le matériel
             ->add('materiel', EntityType::class, [
-                // Spécifie l'entité à utiliser pour peupler la liste
                 'class' => Materiel::class,
-
-                // Utilise la propriété 'nom' de l'entité Materiel pour l'affichage dans la liste
                 'choice_label' => 'nom',
-
-                // Label affiché à côté du champ
                 'label' => 'Matériel à réserver',
-
-                // Texte affiché comme première option (vide)
                 'placeholder' => 'Choisir un matériel...',
-
-                // === Logique clé : Filtrer pour n'afficher que le matériel libre ===
-                'query_builder' => function (MaterielRepository $materielRepository) {
-                    return $materielRepository->createQueryBuilder('m') // 'm' est l'alias pour Materiel
-                        ->where('m.etat = :etatLibre') // Conditionne sur l'état
-                        ->setParameter('etatLibre', Materiel::ETAT_LIBRE) // Définit la valeur du paramètre (utilise la constante de l'entité !)
-                        ->orderBy('m.nom', 'ASC'); // Trie la liste par nom alphabétique
+                'disabled' => $isAdminEdit, // Désactiver si admin édite (pour ne pas changer le matériel d'une résa existante facilement)
+                'query_builder' => function (MaterielRepository $materielRepository) use ($options) {
+                    // Si ce n'est pas une édition admin ET que c'est une nouvelle réservation (pas d'ID sur la data)
+                    // alors on filtre par matériel libre.
+                    // $options['data'] est l'objet Reservation passé au formulaire.
+                    if (!$options['is_admin_edit'] && !$options['data']?->getId()) {
+                        return $materielRepository->createQueryBuilder('m')
+                            ->where('m.etat = :etatLibre')
+                            ->setParameter('etatLibre', Materiel::ETAT_LIBRE)
+                            ->orderBy('m.nom', 'ASC');
+                    }
+                    // Sinon (admin edit OU user modifie sa propre réservation OU matériel pré-sélectionné)
+                    // on affiche tous les matériels pour que celui déjà associé reste sélectionné/visible.
+                    return $materielRepository->createQueryBuilder('m')
+                        ->orderBy('m.nom', 'ASC');
                 },
-
-                // Contrainte : L'utilisateur DOIT sélectionner un matériel
                 'constraints' => [
                     new NotNull(['message' => 'Veuillez sélectionner un matériel.']),
                 ]
-            ])
+            ]);
 
-            // Champ pour la date de début
+        // Si c'est un admin qui édite, on lui permet de changer l'utilisateur associé
+        if ($isAdminEdit) {
+            $builder->add('user', EntityType::class, [
+                'class' => User::class,
+                'choice_label' => function(User $user) {
+                    $displayName = trim($user->getPrenom() . ' ' . $user->getNom());
+                    return $displayName . ' (' . $user->getEmail() . ')';
+                },
+                'label' => 'Membre (locataire)',
+                'placeholder' => 'Sélectionnez un membre',
+                'required' => true, // En mode admin, l'utilisateur doit être spécifié
+                'constraints' => [
+                    new NotNull(['message' => 'Veuillez sélectionner un utilisateur.']),
+                ]
+            ]);
+        }
+        // Pour un utilisateur normal créant une réservation, l'utilisateur est
+        // défini dans le contrôleur ($reservation->setUser($this->getUser());)
+
+
+        $builder
             ->add('dateDebut', DateTimeType::class, [
-                'widget' => 'single_text', // Utilise un seul champ input type="datetime-local" HTML5
+                'widget' => 'single_text',
                 'label' => 'Début de la réservation',
+                'html5' => true, // Assure une meilleure compatibilité avec les navigateurs pour datetime-local
                 'constraints' => [
                     new NotNull(['message' => 'La date de début est requise.']),
-                    // Contrainte : La date doit être aujourd'hui ou dans le futur
                     new GreaterThanOrEqual([
-                        'value' => 'today', // Compare à minuit aujourd'hui
+                        'value' => 'today',
                         'message' => 'La date de début ne peut pas être dans le passé.',
                     ]),
                 ],
-                // Attributs HTML pour le champ (ex: pour le minimum côté client)
                 'attr' => [
-                    'min' => (new \DateTime())->format('Y-m-d\TH:i'),
+                    // 'min' est mieux géré dynamiquement ou via JS pour la comparaison avec dateFin
+                    // La contrainte GreaterThanOrEqual s'en charge côté serveur.
                 ]
             ])
-
-            // Champ pour la date de fin
             ->add('dateFin', DateTimeType::class, [
                 'widget' => 'single_text',
                 'label' => 'Fin de la réservation',
+                'html5' => true,
                 'constraints' => [
                     new NotNull(['message' => 'La date de fin est requise.']),
-                    // !! IMPORTANT : Ajouter une validation pour s'assurer que dateFin > dateDebut
-                    // Ceci est souvent fait via une contrainte de classe sur l'entité Reservation
-                    // ou via une contrainte Callback dans ce formulaire (voir exemple précédent).
+                    // Une contrainte de classe sur l'entité Reservation pour vérifier dateFin > dateDebut
+                    // est la meilleure solution (ex: @Assert\Expression("this.getDateFin() > this.getDateDebut()", message="..."))
                 ],
                 'attr' => [
-                     'min' => (new \DateTime())->format('Y-m-d\TH:i'),
+                    // 'min' est mieux géré dynamiquement ou via JS
                 ]
             ])
-
-            // Champ pour la latitude (optionnel)
             ->add('latitude', NumberType::class, [
                 'label' => 'Latitude (optionnel)',
-                'required' => false, // Ce champ n'est pas obligatoire
-                'html5' => true, // Utilise input type="number" avec step="any"
-                'scale' => 6, // Autorise jusqu'à 6 chiffres après la virgule
+                'required' => false,
+                'html5' => true,
+                'scale' => 6,
                  'attr' => [
-                     'step' => 'any' // Nécessaire pour les nombres décimaux dans certains navigateurs
+                     'step' => 'any'
                  ]
             ])
-
-            // Champ pour la longitude (optionnel)
             ->add('longitude', NumberType::class, [
                 'label' => 'Longitude (optionnel)',
                 'required' => false,
@@ -101,18 +116,33 @@ class ReservationType extends AbstractType
                  'attr' => [
                      'step' => 'any'
                  ]
-            ])
-            // Si tu avais besoin du nom du locataire, tu l'ajouterais ici avec TextType::class
-            // ->add('nomLocataire', TextType::class, ['label' => 'Nom du locataire'])
-        ;
+            ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            // Lie ce formulaire à l'entité Reservation
             'data_class' => Reservation::class,
-            // Tu peux ajouter des validations globales au formulaire ici si besoin
+            'is_admin_edit' => false, // <<<<---- DÉFINITION DE L'OPTION PERSONNALISÉE
+            // Vous pouvez ajouter une option pour la validation des dates ici si vous ne le faites pas sur l'entité
+            // 'constraints' => [
+            //     new Callback([$this, 'validateDates']), // Exemple de validation par callback
+            // ],
         ]);
+
+        // Définir le type autorisé pour votre option personnalisée
+        $resolver->setAllowedTypes('is_admin_edit', 'bool');
     }
+
+    // Si vous utilisez une contrainte Callback pour valider que dateFin > dateDebut
+    // public function validateDates(Reservation $reservation, ExecutionContextInterface $context): void
+    // {
+    //     if ($reservation->getDateDebut() && $reservation->getDateFin()) {
+    //         if ($reservation->getDateFin() <= $reservation->getDateDebut()) {
+    //             $context->buildViolation('La date de fin doit être postérieure à la date de début.')
+    //                 ->atPath('dateFin') // Lie l'erreur au champ dateFin
+    //                 ->addViolation();
+    //         }
+    //     }
+    // }
 }

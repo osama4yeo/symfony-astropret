@@ -1,0 +1,94 @@
+{# templates/admin/reservation/edit.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier la Réservation #{{ reservation.id }}{% endblock %}
+
+{% block body_content %}
+    <div class="container mt-4">
+        <h1 class="mb-4">Modifier la Réservation #{{ reservation.id }}</h1>
+
+        {# Inclusion des messages flash #}
+        {% include 'partials/_flash_messages.html.twig' ignore missing %}
+
+        {# Afficher des informations non modifiables sur la réservation #}
+        <div class="card mb-4">
+            <div class="card-header">
+                Informations sur la Réservation
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    <strong>Matériel :</strong>
+                    {% if reservation.materiel %}
+                        {{ reservation.materiel.nom }} (ID: {{ reservation.materiel.id }})
+                    {% else %}
+                        <span class="text-danger">Non défini</span>
+                    {% endif %}
+                </li>
+                <li class="list-group-item">
+                    <strong>État actuel du matériel :</strong>
+                    {% if reservation.materiel %}
+                        {% set etat_class = reservation.materiel.etat == constant('App\\Entity\\Materiel::ETAT_LIBRE') ? 'success' : (reservation.materiel.etat == constant('App\\Entity\\Materiel::ETAT_LOUE') ? 'warning' : 'secondary') %}
+                        <span class="badge bg-{{ etat_class }}">
+                            {{ reservation.materiel.etat | capitalize }}
+                        </span>
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </li>
+                {% if reservation.user %} {# Si tu as une relation User sur la réservation #}
+                <li class="list-group-item">
+                    <strong>Utilisateur (Locataire) :</strong>
+                    {{ reservation.user.email }}
+                </li>
+                {% endif %}
+                {# Si tu as un champ nomLocataire texte sur la réservation #}
+                {# <li class="list-group-item">
+                    <strong>Nom du Locataire (champ texte) :</strong>
+                    {{ reservation.nomLocataire | default('Non renseigné') }}
+                </li> #}
+            </ul>
+        </div>
+
+        {# Formulaire de modification #}
+        {{ form_start(form) }}
+
+            {# Affiche les erreurs globales du formulaire s'il y en a #}
+            {{ form_errors(form) }}
+
+            {# Champ Matériel - sera désactivé si configuré dans ReservationFormType pour le mode admin_edit #}
+            {# Si tu ne veux pas l'afficher du tout en mode édition, tu peux le commenter
+               ou ajouter une condition if dans le FormType pour ne pas l'ajouter. #}
+            {% if form.materiel is defined %} {# Vérifie si le champ existe avant de tenter de le rendre #}
+                {{ form_row(form.materiel) }}
+            {% endif %}
+
+            {# Champs modifiables #}
+            {{ form_row(form.dateDebut) }}
+            {{ form_row(form.dateFin) }}
+
+            {# Si tu as un champ nomLocataire modifiable par l'admin #}
+            {# {% if form.nomLocataire is defined %}
+                {{ form_row(form.nomLocataire) }}
+            {% endif %} #}
+
+            {{ form_row(form.latitude) }}
+            {{ form_row(form.longitude) }}
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check-circle"></i> Enregistrer les modifications
+                </button>
+                <a href="{{ path('admin_reservation_list') }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Annuler
+                </a>
+            </div>
+
+        {{ form_end(form) }}
+    </div>
+{% endblock body_content %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {# Si tu utilises Bootstrap Icons (facultatif) #}
+    {# <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"> #}
+{% endblock %}
