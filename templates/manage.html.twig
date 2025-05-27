@@ -1,0 +1,65 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion du calendrier{% endblock %}
+
+{% block body_content %}
+    <div class="container mt-4">
+        <h2>Gestion des événements (Admin)</h2>
+        <div id="calendar"></div>
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet">
+    <style>
+        #calendar { max-width: 1000px; margin: 20px auto; }
+    </style>
+{% endblock %}
+
+{% block javascripts_page_specific %}
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const calendarEl = document.getElementById('calendar');
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'fr',
+                editable: true,
+                selectable: true,
+                events: '{{ path("calendar_events") }}',
+
+                dateClick: function(info) {
+                    const title = prompt("Titre de l'événement ?");
+                    if (title) {
+                        // Ajoute une heure par défaut (9h à 10h)
+                        const startDateTime = info.dateStr + "T09:00:00";
+                        const endDateTime = info.dateStr + "T10:00:00";
+
+                        fetch('{{ path("calendar_create_event") }}', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                title: title,
+                                start: startDateTime,
+                                end: endDateTime
+                            })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                calendar.refetchEvents();
+                            } else {
+                                alert("Erreur: " + data.error);
+                            }
+                        })
+                        .catch(err => {
+                            alert("Erreur réseau : " + err);
+                        });
+                    }
+                }
+            });
+            calendar.render();
+        });
+    </script>
+{% endblock %}
