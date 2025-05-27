@@ -1,0 +1,200 @@
+{# templates/admin/reservation/list.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des Prêts et Réservations{% endblock %}
+
+{% block body_content %}
+    <div class="container mt-4">
+        <h1 class="mb-4">Gestion des Prêts et Réservations</h1>
+
+        <div id="map-preview-container">
+            <div id="map-preview"></div>
+        </div>
+
+        {% include 'partials/_flash_messages.html.twig' ignore missing %}
+
+        {% if reservations is not empty %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID Rés.</th>
+                            <th>Matériel</th>
+                            <th>Utilisateur (Locataire)</th>
+                            <th>Début du Prêt</th>
+                            <th>Fin du Prêt</th>
+                            <th>État Actuel du Matériel</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for reservation_item in reservations %}
+                        <tr>
+                            <td>#{{ reservation_item.id }}</td>
+                            <td>
+                                {% if reservation_item.materiel %}
+                                    {{ reservation_item.materiel.nom }}
+                                    <small class="d-block text-muted">ID Mat: {{ reservation_item.materiel.id }}</small>
+                                {% else %}
+                                    <span class="text-danger">Matériel non défini</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if reservation_item.user %}
+                                    {% set user_display_name = (reservation_item.user.prenom ~ ' ' ~ reservation_item.user.nom)|trim %}
+                                    {% if user_display_name is not empty %}
+                                        {{ user_display_name }}
+                                    {% else %}
+                                        {{ reservation_item.user.email }}
+                                    {% endif %}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>{{ reservation_item.dateDebut ? reservation_item.dateDebut|date('d/m/Y H:i') : 'Non défini' }}</td>
+                            <td>{{ reservation_item.dateFin ? reservation_item.dateFin|date('d/m/Y H:i') : 'Non défini' }}</td>
+                            <td>
+                                {% if reservation_item.materiel %}
+                                    {% set etat_class = reservation_item.materiel.etat == constant('App\\Entity\\Materiel::ETAT_LIBRE') ? 'success' : (reservation_item.materiel.etat == constant('App\\Entity\\Materiel::ETAT_LOUE') ? 'warning' : 'secondary') %}
+                                    <span class="badge bg-{{ etat_class }}">
+                                        {{ reservation_item.materiel.etat | capitalize }}
+                                    </span>
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if reservation_item.latitude is not null and reservation_item.longitude is not null %}
+                                    <button type="button" class="btn btn-sm btn-info mb-1 show-map-btn"
+                                            data-latitude="{{ reservation_item.latitude }}"
+                                            data-longitude="{{ reservation_item.longitude }}"
+                                            data-map-url="{{ path('reservation_map_view', {'id': reservation_item.id}) }}"
+                                            title="Voir sur la carte (survol) ou ouvrir en grand (clic)">
+                                        Carte
+                                    </button>
+                                {% endif %}
+                                <a href="{{ path('admin_reservation_edit', {'id': reservation_item.id}) }}" class="btn btn-sm btn-primary mb-1" title="Modifier cette réservation">
+                                    Modifier
+                                </a>
+                                <form method="post" action="{{ path('admin_reservation_delete', {'id': reservation_item.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer la réservation #{{ reservation_item.id }} ?');" style="display: inline-block;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ reservation_item.id) }}">
+                                    <button class="btn btn-sm btn-danger" title="Supprimer cette réservation">
+                                        Supprimer
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info" role="alert">
+                Aucune réservation enregistrée pour le moment.
+            </div>
+        {% endif %}
+    </div>
+{% endblock body_content %}
+
+{% block javascripts_page_specific %}
+     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('DOM Loaded. Initializing map preview script.');
+            const mapPreviewContainer = document.getElementById('map-preview-container');
+            const mapPreviewDiv = document.getElementById('map-preview');
+            let map = null;
+            let marker = null;
+            let hideMapTimeout = null;
+
+            if (!mapPreviewContainer || !mapPreviewDiv) {
+                console.error('Map preview container or div not found in the DOM!');
+                return;
+            }
+            console.log('Map preview elements found:', { mapPreviewContainer, mapPreviewDiv });
+
+            document.querySelectorAll('.show-map-btn').forEach(button => {
+                button.addEventListener('mouseenter', function (event) {
+                    clearTimeout(hideMapTimeout);
+                    console.log('%c--- MOUSE ENTER BUTTON ---', 'color: blue; font-weight: bold;');
+                    const latitudeStr = this.dataset.latitude;
+                    const longitudeStr = this.dataset.longitude;
+                    if (typeof latitudeStr === 'undefined' || typeof longitudeStr === 'undefined' || latitudeStr === "" || longitudeStr === "") {
+                        console.warn('Coords manquantes pour preview.'); mapPreviewContainer.style.display = 'none'; return;
+                    }
+                    const latitude = parseFloat(latitudeStr);
+                    const longitude = parseFloat(longitudeStr);
+                    if (isNaN(latitude) || isNaN(longitude)) {
+                        console.error('Erreur parsing preview.'); mapPreviewContainer.style.display = 'none'; return;
+                    }
+                    const rect = this.getBoundingClientRect();
+                    mapPreviewContainer.style.top = (rect.top + window.scrollY + rect.height + 5) + 'px';
+                    mapPreviewContainer.style.left = (rect.left + window.scrollX) + 'px';
+                    mapPreviewContainer.style.display = 'block';
+                    console.log('Preview container dims:', { width: mapPreviewContainer.offsetWidth, height: mapPreviewContainer.offsetHeight });
+                    if (!map) {
+                        console.log('Init preview map.');
+                        try {
+                            map = L.map(mapPreviewDiv, { preferCanvas: true }).setView([latitude, longitude], 6);
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', maxZoom: 18,
+                            }).addTo(map);
+                        } catch (e) { console.error('Error init preview map:', e); mapPreviewContainer.style.display = 'none'; return; }
+                    } else { map.setView([latitude, longitude], 13); }
+                    if (!marker) { marker = L.marker([latitude, longitude]).addTo(map); } else { marker.setLatLng([latitude, longitude]); }
+                    setTimeout(() => { if (map) map.invalidateSize(); console.log('Preview invalidateSize.'); }, 50);
+                    console.log('%c--- MAP PREVIEW VISIBLE ---', 'color: green; font-weight: bold;');
+                });
+
+                button.addEventListener('mouseleave', function () {
+                    console.log('%c--- MOUSE LEAVE BUTTON ---', 'color: red; font-weight: bold;');
+                    hideMapTimeout = setTimeout(() => {
+                        if (mapPreviewContainer.style.display === 'block' && !mapPreviewContainer.matches(':hover')) {
+                           mapPreviewContainer.style.display = 'none';
+                        }
+                    }, 300);
+                });
+
+                button.addEventListener('click', function(event) {
+                    event.preventDefault(); 
+                    console.log('%c--- BUTTON CLICK ---', 'color: purple; font-weight: bold;');
+                    const mapUrl = this.dataset.mapUrl;
+                    console.log('Map URL from data-attribute:', mapUrl);
+                    if (mapUrl) {
+                       window.open(mapUrl, '_blank'); 
+                       console.log('Opened map in new tab:', mapUrl);
+                    } else {
+                       console.error('data-map-url manquant.');
+                    }
+                });
+            });
+
+            mapPreviewContainer.addEventListener('mouseenter', function() {
+                console.log('%c--- MOUSE ENTER MAP CONTAINER ---', 'color: orange; font-weight: bold;');
+                clearTimeout(hideMapTimeout); 
+            });
+            mapPreviewContainer.addEventListener('mouseleave', function() {
+                console.log('%c--- MOUSE LEAVE MAP CONTAINER ---', 'color: orange; font-weight: bold;');
+                 hideMapTimeout = setTimeout(() => { 
+                    mapPreviewContainer.style.display = 'none';
+                }, 100);
+            });
+
+            document.addEventListener('click', function(event) {
+                if (mapPreviewContainer && mapPreviewContainer.style.display === 'block') {
+                    if (!mapPreviewContainer.contains(event.target) && !event.target.classList.contains('show-map-btn')) {
+                        mapPreviewContainer.style.display = 'none';
+                    }
+                }
+            });
+            console.log('Map preview script fully initialized.');
+        });
+    </script>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .table th, .table td { vertical-align: middle; }
+        .table th.text-end, .table td.text-end { text-align: right; }
+    </style>
+{% endblock %}

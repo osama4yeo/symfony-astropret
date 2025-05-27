@@ -1,89 +1,104 @@
+{# templates/base.html.twig #}
 <!DOCTYPE html>
 <html lang="fr">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{% block title %}Astropret - Location de Matériel{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
-
-        {% block stylesheets %}
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" />
-            <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
-            {# === AJOUT POUR LE STICKY FOOTER (si tu le mets dans style.css) === #}
-            {# Ou tu peux mettre le CSS directement dans une balise <style> ici #}
-        {% endblock %}
-    </head>
-    {# === MODIFICATION 1: Ajout d'une classe au body pour le wrapper flex === #}
-    <body class="d-flex flex-column min-vh-100"> {# Classes Bootstrap pour Flexbox et hauteur minimale #}
-        <header>
-            <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-                {# ... Ta barre de navigation ... #}
-                 <div class="container-fluid">
-                    <a class="navbar-brand" href="{{ path('app_home') }}">Astropret</a>
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-                    <div class="collapse navbar-collapse" id="navbarNav">
-                        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ path('app_home') }}">Accueil</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ path('calendar_view') }}">Calendrier</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ path('user_trombinoscope') }}">Trombinoscope</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ path('app_materiel_index') }}">Location</a>
-                            </li>
-                            {% if app.user %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ path('user_profile') }}">Profil</a>
-                            </li>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Astropret{% endblock %}</title> {# Vous pouvez aussi changer ce titre par défaut si besoin #}
+    {% block stylesheets %}
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" />
+        <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <style>
+        /* Style pour le conteneur de la mini-carte */
+        #map-preview-container {
+            display: none; 
+            position: absolute; 
+            width: 350px;
+            height: 300px;
+            z-index: 1000; 
+        }
+        #map-preview { 
+            height: 100%; 
+            width: 100%;  
+            border: 1px solid #ccc;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+    </style>
+    {% endblock %}
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark"> 
+             <div class="container-fluid">
+                <a class="navbar-brand" href="{{ path('app_home') }}">OCEAN</a>  {# <--- MODIFIÉ #}
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('app_home') }}">Accueil</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('calendar_view') }}">Calendrier</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('user_trombinoscope') }}">Trombinoscope</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('app_location_dispatch') }}">Location</a>
+                        </li>
+                        {% if app.user %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('user_profile') }}">Profil</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                        {% if app.user %}
+                            {% if is_granted('ROLE_ADMIN') %}
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ path('admin_reservation_list') }}">Gestion Prêts</a>
+                                </li>
                             {% endif %}
-                        </ul>
-                        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                            {% if app.user %}
-                                {% if is_granted('ROLE_ADMIN') %}
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="{{ path('reservation_index') }}">Gestion Prêts (Admin)</a>
-                                    </li>
-                                {% endif %}
-                                <li class="nav-item"><span class="navbar-text me-2">Bonjour, {{ app.user.prenom }} {{ app.user.nom }}!</span></li>
-                                <li class="nav-item"><a class="nav-link" href="{{ path('app_logout') }}">Déconnexion</a></li>
-                            {% else %}
-                                <li class="nav-item"><a class="nav-link" href="{{ path('app_register') }}">Inscription</a></li>
-                                <li class="nav-item"><a class="nav-link" href="{{ path('app_login') }}">Connexion</a></li>
-                            {% endif %}
-                        </ul>
-                    </div>
+                            {% set user_display = (app.user.prenom ~ ' ' ~ app.user.nom)|trim %}
+                            <li class="nav-item"><span class="navbar-text me-2 nav-link">Bonjour, {{ user_display is not empty ? user_display : app.user.email }}!</span></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ path('app_logout') }}">Déconnexion</a></li>
+                        {% else %}
+                            <li class="nav-item"><a class="nav-link" href="{{ path('app_register') }}">Inscription</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ path('app_login') }}">Connexion</a></li>
+                        {% endif %}
+                    </ul>
                 </div>
-            </nav>
-        </header>
-
-        {# === MODIFICATION 2: Le <main> va grandir pour pousser le footer === #}
-        <main role="main" class="container mt-4 flex-shrink-0"> {# flex-shrink-0 est important si le contenu est petit #}
-                                                                {# Pour que le main grandisse, on peut aussi utiliser flex-grow-1 sur main et encapsuler body dans un wrapper #}
-            {% include 'partials/_flash_messages.html.twig' ignore missing %}
-            {% block body_content %}
-            {% endblock %}
-        </main>
-
-        {# === MODIFICATION 3: Le footer utilisera margin-top: auto avec Bootstrap === #}
-        <footer class="footer mt-auto py-3 bg-light"> {# mt-auto est la clé avec Bootstrap flex #}
-            <div class="container text-center">
-                <span class="text-muted">© {{ "now"|date("Y") }} Astropret. Tous droits réservés.</span>
             </div>
-        </footer>
+        </nav>
+    </header>
 
-        {% block javascripts_base %}
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <main role="main" class="container mt-4 flex-shrink-0">
+        {% block body_content %}
         {% endblock %}
+    </main>
 
-        {% block javascripts_page_specific %}
-            <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-        {% endblock %}
-    </body>
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container text-center">
+            <span class="text-muted">© {{ "now"|date("Y") }} Astropret. Tous droits réservés.</span>
+        </div>
+    </footer>
+
+    {% block javascripts_base %}
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        {# Si share-modal.js est inclus ici globalement, il pourrait être la source du problème s'il s'exécute avant javascripts_page_specific #}
+        {# Exemple: <script src="{{ asset('assets/js/share-modal.js') }}"></script> #}
+    {% endblock %}
+
+    {% block javascripts_page_specific %}
+        {# Ce bloc est exécuté après javascripts_base. #}
+        {# Si share-modal.js est dans javascripts_base et plante, ce bloc pourrait ne pas s'exécuter. #}
+        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    {% endblock %}
+</body>
 </html>

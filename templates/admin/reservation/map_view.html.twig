@@ -1,0 +1,113 @@
+{# templates/admin/reservation/map_view.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Carte pour la réservation #{{ reservation.id }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        #full-map {
+            height: 75vh; 
+            width: 100%;
+            border: 1px solid #ccc;
+            margin-bottom: 1.5rem; 
+        }
+        .map-container-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+        }
+    </style>
+{% endblock %}
+
+{% block body_content %}
+    <div class="container mt-4 map-container-wrapper">
+        <div class="text-center mb-3"> 
+            <h1 class="mb-2">Localisation pour la réservation #{{ reservation.id }}</h1>
+            <p class="lead">
+                Matériel : <strong>{{ reservation.materiel ? reservation.materiel.nom : 'N/A' }}</strong><br>
+                {% if reservation.user %}
+                    {% set user_display_name = (reservation.user.prenom ~ ' ' ~ reservation.user.nom)|trim %}
+                    Utilisateur : <strong>{{ user_display_name is not empty ? user_display_name : reservation.user.email }}</strong>
+                {% else %}
+                    Utilisateur : <strong>N/A</strong>
+                {% endif %}
+            </p>
+        </div>
+
+        <div id="full-map"></div>
+
+        {% set referer = app.request.headers.get('referer') %}
+        {% set default_return_path = is_granted('ROLE_ADMIN') ? path('admin_reservation_list') : path('app_home') %}
+        <a href="{{ referer and referer != app.request.uri ? referer : default_return_path }}" class="btn btn-outline-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left-short" viewBox="0 0 16 16" style="vertical-align: text-bottom; margin-right: .25em;">
+              <path fill-rule="evenodd" d="M12 8a.5.5 0 0 1-.5.5H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5a.5.5 0 0 1 .5.5z"/>
+            </svg>
+            Retour
+        </a>
+    </div>
+{% endblock %}
+
+{% block javascripts_page_specific %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('[Full Map Page] DOMContentLoaded event fired.');
+            const mapDiv = document.getElementById('full-map');
+            if (!mapDiv) {
+                console.error('[Full Map Page] Element #full-map non trouvé.');
+                return;
+            }
+            console.log('[Full Map Page] Element #full-map found.');
+
+            // 1. Récupérer les coordonnées comme chaînes (ou null) depuis Twig
+            const latitudeStr = {{ reservation.latitude|json_encode|raw }};
+            const longitudeStr = {{ reservation.longitude|json_encode|raw }};
+
+            console.log('[Full Map Page] Coordonnées brutes de Twig:', {latitudeStr, longitudeStr});
+            console.log('[Full Map Page] Type LatitudeStr:', typeof latitudeStr, 'Type LongitudeStr:', typeof longitudeStr);
+
+            // 2. Tenter de convertir ces chaînes en nombres flottants
+            const latitude = parseFloat(latitudeStr);
+            const longitude = parseFloat(longitudeStr);
+
+            console.log('[Full Map Page] Coordonnées après parseFloat:', {latitude, longitude});
+            console.log('[Full Map Page] Type Latitude après parseFloat:', typeof latitude, 'Type Longitude après parseFloat:', typeof longitude);
+
+            // 3. Vérifier si le parsing a réussi et si on a des nombres valides
+            // (on vérifie si les chaînes originales étaient null OU si parseFloat a retourné NaN)
+            if (latitudeStr === null || longitudeStr === null || isNaN(latitude) || isNaN(longitude)) {
+                console.warn('[Full Map Page] Coordonnées invalides ou manquantes après parsing. Affichage d_alerte.');
+                mapDiv.innerHTML = '<div class="alert alert-warning text-center" role="alert">Coordonnées géographiques non disponibles ou invalides pour cette réservation.</div>';
+                mapDiv.style.height = 'auto'; 
+                return;
+            }
+
+            // Si on arrive ici, latitude et longitude sont des nombres valides
+            try {
+                console.log('[Full Map Page] Initialisation de la carte Leaflet avec les nombres:', [latitude, longitude]);
+                const map = L.map('full-map').setView([latitude, longitude], 14);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                    maxZoom: 19,
+                }).addTo(map);
+                console.log('[Full Map Page] Fond de carte ajouté.');
+
+                L.marker([latitude, longitude]).addTo(map)
+                    .bindPopup('<b>Réservation #{{ reservation.id }}</b><br>Matériel: {{ reservation.materiel ? reservation.materiel.nom|escape('js') : 'N/A' }}')
+                    .openPopup();
+                console.log('[Full Map Page] Marqueur ajouté.');
+
+                setTimeout(function() {
+                    map.invalidateSize();
+                    console.log('[Full Map Page] invalidateSize appelée.');
+                }, 100);
+
+            } catch (e) {
+                console.error("[Full Map Page] Erreur lors de l'initialisation de la grande carte Leaflet:", e);
+                mapDiv.innerHTML = '<div class="alert alert-danger text-center" role="alert">Erreur lors du chargement de la carte.</div>';
+                mapDiv.style.height = 'auto';
+            }
+        });
+    </script>
+{% endblock %}
