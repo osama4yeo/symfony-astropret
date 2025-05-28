@@ -27,25 +27,57 @@
     {{ parent() }}
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet">
     <style>
-        .fc-event-title {
-            white-space: normal !important;
-            overflow: visible;
+        body {
+            background-color: #f8f9fa;
         }
-        .fc-event-tooltip {
-            display: none;
-            position: absolute;
-            background: #333;
-            color: #fff;
-            padding: 5px;
-            border-radius: 3px;
-            z-index: 1000;
-            font-size: 0.9em;
+
+        h2 {
+            font-weight: 600;
+            color: #343a40;
+            text-align: center;
+            margin-bottom: 30px;
         }
+
         #calendar {
-            max-width: 1000px;
+            max-width: 900px;
             margin: auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .fc-toolbar-title {
+            font-size: 1.4rem;
+            font-weight: 500;
+            color: #343a40;
+        }
+
+        .fc-button {
+            background-color: #0d6efd !important;
+            border: none !important;
+            border-radius: 6px !important;
+            font-size: 0.9rem;
+        }
+
+        .fc-button-primary:not(:disabled):hover {
+            background-color: #0b5ed7 !important;
+        }
+
+        .fc-daygrid-event {
+            background-color: #198754 !important;
+            border: none !important;
+            border-radius: 6px;
+            padding: 2px 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .alert-warning {
+            text-align: center;
         }
     </style>
+
 {% endblock %}
 
 {% block javascripts_page_specific %}
@@ -56,6 +88,7 @@
             const calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 locale: 'fr',
+                firstDay: 1,
                 events: "{{ path('calendar_events') }}",
 
                 eventContent: function(arg) {
