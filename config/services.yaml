@@ -14,3 +14,7 @@ services:
     App\EventSubscriber\CalendarSubscriber:
         tags:
             - { name: 'kernel.event_subscriber' }
+
+parameters:
+    avatars_directory: '%kernel.project_dir%/public/uploads/avatars'
+

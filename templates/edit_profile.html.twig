@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier mon profil{% endblock %}
+
+{% block body_content %}
+    <div class="container mt-4">
+        <h1 class="mb-4">Modifier mon profil</h1>
+
+        {# Affiche les messages flash (succès/erreur) #}
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success">
+                {{ message }}
+            </div>
+        {% endfor %}
+
+        {{ form_start(form, { 'attr': { 'enctype': 'multipart/form-data' } }) }}
+
+
+            <div class="mb-3">
+                {{ form_label(form.prenom) }}
+                {{ form_widget(form.prenom, { 'attr': {'class': 'form-control'} }) }}
+                {{ form_errors(form.prenom) }}
+            </div>
+
+            <div class="mb-3">
+                {{ form_label(form.nom) }}
+                {{ form_widget(form.nom, { 'attr': {'class': 'form-control'} }) }}
+                {{ form_errors(form.nom) }}
+            </div>
+
+            <div class="mb-3">
+                {{ form_label(form.email) }}
+                {{ form_widget(form.email, { 'attr': {'class': 'form-control'} }) }}
+                {{ form_errors(form.email) }}
+            </div>
+
+            <div class="mb-3">
+                {{ form_label(form.telephone) }}
+                {{ form_widget(form.telephone, { 'attr': {'class': 'form-control'} }) }}
+                {{ form_errors(form.telephone) }}
+            </div>
+
+            <div class="mb-3">
+                {{ form_label(form.dateNaissance) }}
+                {{ form_widget(form.dateNaissance, { 'attr': {'class': 'form-control'} }) }}
+                {{ form_errors(form.dateNaissance) }}
+            </div>
+
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
+            <a href="{{ path('user_profile') }}" class="btn btn-secondary ms-2">Annuler</a>
+
+        {{ form_end(form) }}
+    </div>
+{% endblock %}

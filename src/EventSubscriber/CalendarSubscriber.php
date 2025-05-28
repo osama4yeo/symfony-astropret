@@ -14,4 +14,10 @@ class CalendarSubscriber implements EventSubscriberInterface
             SetDataEvent::class => 'onCalendarSetData',
         ];
     }
+
+    public function deleteEvent(string $eventId): void
+    {
+        $this->calendarService->events->delete($this->calendarId, $eventId);
+    }
+
 }

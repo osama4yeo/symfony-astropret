@@ -1,41 +1,98 @@
 <?php
+
 namespace App\Controller;
 
-// On utilise un service que tu as créé pour se connecter à Google Calendar
 use App\Service\GoogleCalendarService;
-
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
 
 class CalendarController extends AbstractController
 {
-    // Ce contrôleur a besoin du service GoogleCalendarService
     private GoogleCalendarService $googleCalendarService;
 
-    // Symfony injecte automatiquement le service grâce au constructeur
     public function __construct(GoogleCalendarService $googleCalendarService)
     {
         $this->googleCalendarService = $googleCalendarService;
     }
 
-    // 🟦 Route 1 : Affiche la page HTML avec le calendrier
-    #[Route('/calendar', name: 'calendar_view', methods: ['GET'])]
-    public function calendarView(): Response
+    #[Route('/calendar', name: 'calendar_view')]
+    public function index(): Response
     {
-        // Affiche le fichier Twig qui contient le HTML du calendrier
         return $this->render('calendar.html.twig');
     }
 
-    // 🟨 Route 2 : Envoie les événements au format JSON pour FullCalendar
-    #[Route('/api/calendar', name: 'api_calendar_events', methods: ['GET'])]
-    public function getCalendarEvents(): JsonResponse
+    #[Route('/api/calendar/events', name: 'calendar_events')]
+    public function getEvents(): JsonResponse
     {
-        // Appelle ton service pour récupérer les événements depuis Google Calendar
         $events = $this->googleCalendarService->getEvents();
-
-        // Retourne les événements au format JSON pour FullCalendar
         return new JsonResponse($events);
     }
+
+    #[Route('/calendar/manage', name: 'calendar_manage')]
+    public function manage(): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+        return $this->render('manage.html.twig');
+    }
+    
+    #[Route('/api/calendar/create', name: 'calendar_create_event', methods: ['POST'])]
+    public function createEvent(Request $request): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+    
+        $data = json_decode($request->getContent(), true);
+    
+        try {
+            // Appel réel du service
+            $googleEventId = $this->googleCalendarService->createEvent($data);
+    
+            return new JsonResponse([
+                'success' => true,
+                'googleEventId' => $googleEventId
+            ]);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    #[Route('/api/calendar/update', name: 'calendar_update_event', methods: ['POST'])]
+    public function updateEvent(Request $request, GoogleCalendarService $googleCalendarService): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+        $data = json_decode($request->getContent(), true);
+
+        try {
+            $googleCalendarService->updateEvent($data['id'], $data);
+            return new JsonResponse(['success' => true]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/api/calendar/delete', name: 'calendar_delete_event', methods: ['POST'])]
+    public function deleteEvent(Request $request, GoogleCalendarService $googleCalendar): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $eventId = $data['id'] ?? null;
+    
+        if (!$eventId) {
+            return new JsonResponse(['success' => false, 'error' => 'ID manquant'], 400);
+        }
+    
+        try {
+            $googleCalendar->deleteEvent($eventId);
+            return new JsonResponse(['success' => true]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }    
+
 }
