@@ -1,0 +1,47 @@
+/* public/assets/css/style.css */
+
+/* Style pour la barre de navigation principale */
+/* Cible .navbar qui a aussi .navbar-dark (après avoir enlevé bg-dark de la balise nav si tu le fais) */
+.navbar.navbar-dark { /* Assurez-vous que votre nav a la classe navbar-dark si vous n'utilisez plus bg-dark */
+    background-color: #4682B4 !important; /* Ta couleur Bleu Acier */
+}
+
+/* Optionnel: Assurer la lisibilité du texte sur ce nouveau fond si navbar-dark ne suffit pas */
+.navbar.navbar-dark .navbar-nav .nav-link,
+.navbar.navbar-dark .navbar-brand,
+.navbar.navbar-dark .navbar-text, /* Pour le "Bonjour ..." */
+.navbar.navbar-dark .nav-item .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.navbar.navbar-dark .navbar-nav .nav-link.active,
+.navbar.navbar-dark .navbar-nav .nav-link:hover,
+.navbar.navbar-dark .navbar-brand:hover {
+    color: #ffffff !important;
+}
+
+/* Assure-toi que le bouton toggler (hamburger) est visible sur ce fond */
+.navbar.navbar-dark .navbar-toggler {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.navbar.navbar-dark .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+/* Styles pour le sticky footer si tu les mets ici (non nécessaire si déjà géré par Bootstrap flex dans base.html.twig) */
+/*
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1 0 auto;
+}
+
+.footer {
+    flex-shrink: 0;
+}
+*/
