@@ -98,7 +98,7 @@ class ReservationController extends AbstractController
             return $this->redirectToRoute('app_login');
         }
         if ($this->isGranted('ROLE_ADMIN')) {
-            return $this->redirectToRoute('admin_reservation_list');
+            return $this->redirectToRoute('app_materiel_index');
         }
         return $this->redirectToRoute('app_materiel_index');
     }

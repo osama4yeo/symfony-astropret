@@ -1,55 +1,70 @@
 {# templates/materiel/index.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Liste du Matériel{% endblock %}
+{% block title %}Liste du Matériel Disponible{% endblock %}
 
-{# Changement du nom du bloc ici pour correspondre à base.html.twig #}
 {% block body_content %}
-    <h1>Liste du Matériel Disponible</h1>
+    <div class="container mt-4">
+        <h1 class="mb-4">Liste du Matériel Disponible</h1>
 
-    {# Inclusion des messages flash si tu en as #}
-    {% include 'partials/_flash_messages.html.twig' ignore missing %}
+        {% include 'partials/_flash_messages.html.twig' ignore missing %}
 
-    {# Optionnel : Lien pour déclencher la mise à jour manuelle des statuts #}
-    {# <div class="mb-3">
-        <form method="post" action="{{ path('app_materiel_update_status') }}" style="display: inline;">
-            <button type="submit" class="btn btn-warning">Vérifier/MAJ Statuts Matériels Terminés</button>
-        </form>
-    </div> #}
+        {% if materiels is not empty %}
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">
+                {% for materiel_item in materiels %}
+                    <div class="col d-flex align-items-stretch"> {# d-flex et align-items-stretch pour que les cartes remplissent la hauteur de la colonne #}
+                        <div class="card w-100 shadow-sm"> {# w-100 pour que la carte prenne toute la largeur de la colonne #}
+                            
+                            {# Affichage de l'image #}
+                            {% if materiel_item.imageFilename %}
+                                <img src="{{ asset('images/materiel/' ~ materiel_item.imageFilename) }}" class="card-img-top" alt="{{ materiel_item.nom }}" style="height: 200px; object-fit: cover;">
+                            {% else %}
+                                {# Image placeholder si aucune image n'est définie pour le matériel #}
+                                <img src="{{ asset('images/placeholder_materiel.png') }}" class="card-img-top" alt="Image non disponible" style="height: 200px; object-fit: cover; filter: grayscale(80%);">
+                                {# Assurez-vous d'avoir une image public/images/placeholder_materiel.png #}
+                            {% endif %}
 
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Nom</th>
-                <th>État</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for materiel_item in materiels %} {# J'ai renommé 'materiel' en 'materiel_item' pour éviter confusion avec une variable globale potentielle #}
-            <tr>
-                <td>{{ materiel_item.nom }}</td>
-                <td>
-                    {% set etat_class = materiel_item.etat == constant('App\\Entity\\Materiel::ETAT_LIBRE') ? 'success' : (materiel_item.etat == constant('App\\Entity\\Materiel::ETAT_LOUE') ? 'warning' : 'secondary') %}
-                    <span class="badge bg-{{ etat_class }}">
-                        {{ materiel_item.etat | capitalize }}
-                    </span>
-                </td>
-                <td>
-                    {% if materiel_item.etat == constant('App\\Entity\\Materiel::ETAT_LIBRE') %}
-                        <a href="{{ path('reservation_new', {'materielId': materiel_item.id}) }}" class="btn btn-sm btn-primary">
-                            Louer
-                        </a>
-                    {% else %}
-                         <span class="text-muted fst-italic">Indisponible</span>
-                    {% endif %}
-                </td>
-            </tr>
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">{{ materiel_item.nom }}</h5>
+
+                                <p class="card-text mb-2">
+                                    État : 
+                                    {% set etat_class = materiel_item.etat == constant('App\\Entity\\Materiel::ETAT_LIBRE') ? 'success' : (materiel_item.etat == constant('App\\Entity\\Materiel::ETAT_LOUE') ? 'warning' : 'secondary') %}
+                                    <span class="badge bg-{{ etat_class }}">{{ materiel_item.etat | capitalize }}</span>
+                                </p>
+
+                                {# Bouton d'action en bas de la carte #}
+                                <div class="mt-auto text-center pt-2"> {# mt-auto et pt-2 pour espacement #}
+                                    {% if materiel_item.etat == constant('App\\Entity\\Materiel::ETAT_LIBRE') %}
+                                        <a href="{{ path('reservation_new', {'materielId': materiel_item.id}) }}" class="btn btn-primary">
+                                            Louer cet article
+                                        </a>
+                                    {% else %}
+                                        <button class="btn btn-secondary" disabled>Indisponible</button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
         {% else %}
-            <tr>
-                <td colspan="3" class="text-center">Aucun matériel trouvé.</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-{% endblock body_content %} {# Nom du bloc mis à jour ici aussi #}
+            <div class="alert alert-info mt-4" role="alert">
+                Aucun matériel disponible pour le moment.
+            </div>
+        {% endif %}
+    </div>
+{% endblock body_content %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .card-title {
+            min-height: 2.5rem; /* Ajusté pour potentiellement moins de texte */
+            margin-bottom: 0.5rem; /* Réduit l'espace sous le titre */
+        }
+        .card-img-top {
+             border-bottom: 1px solid #eee; /* Petite séparation si l'image a un fond similaire à la carte */
+        }
+    </style>
+{% endblock %}
