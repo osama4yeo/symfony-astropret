@@ -3,63 +3,137 @@
 {% block title %}Gestion du calendrier{% endblock %}
 
 {% block body_content %}
-    <div class="container mt-4">
-        <h2>Gestion des événements (Admin)</h2>
-        <div id="calendar"></div>
+<div class="container mt-4">
+    <h2>Gestion des événements (Admin)</h2>
+    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#eventModal">
+        + Ajouter un événement
+    </button>
+    <div id="calendar"></div>
+</div>
+
+<!-- Modal Bootstrap -->
+<div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="eventForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="eventModalLabel">Détails de l'événement</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="eventId">
+                    <div class="mb-3">
+                        <label for="eventTitle" class="form-label">Titre</label>
+                        <input type="text" class="form-control" id="eventTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="eventDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="eventDescription"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="eventStart" class="form-label">Date et heure de début</label>
+                        <input type="datetime-local" class="form-control" id="eventStart" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="eventEnd" class="form-label">Date et heure de fin</label>
+                        <input type="datetime-local" class="form-control" id="eventEnd" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" id="deleteEventBtn">Supprimer</button>
+                    <button type="submit" class="btn btn-success">Enregistrer</button>
+                </div>
+            </form>
+        </div>
     </div>
+</div>
 {% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet">
     <style>
-        #calendar { max-width: 1000px; margin: 20px auto; }
+        #calendar { max-width: 1000px; margin: auto; }
     </style>
 {% endblock %}
 
 {% block javascripts_page_specific %}
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const calendarEl = document.getElementById('calendar');
-            const calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                locale: 'fr',
-                editable: true,
-                selectable: true,
-                events: '{{ path("calendar_events") }}',
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const calendarEl = document.getElementById('calendar');
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'fr',
+            editable: true,
+            selectable: true,
+            events: '{{ path("calendar_events") }}',
+            dateClick: function(info) {
+                document.getElementById('eventId').value = '';
+                document.getElementById('eventTitle').value = '';
+                document.getElementById('eventDescription').value = '';
+                document.getElementById('eventStart').value = info.dateStr + 'T09:00';
+                document.getElementById('eventEnd').value = info.dateStr + 'T10:00';
+                const modal = new bootstrap.Modal(document.getElementById('eventModal'));
+                modal.show();
+            },
+            eventClick: function(info) {
+                const event = info.event;
+                document.getElementById('eventId').value = event.id;
+                document.getElementById('eventTitle').value = event.title;
+                document.getElementById('eventDescription').value = event.extendedProps.description || '';
+                document.getElementById('eventStart').value = event.start.toISOString().slice(0, 16);
+                document.getElementById('eventEnd').value = event.end.toISOString().slice(0, 16);
+                const modal = new bootstrap.Modal(document.getElementById('eventModal'));
+                modal.show();
+            }
+        });
+        calendar.render();
 
-                dateClick: function(info) {
-                    const title = prompt("Titre de l'événement ?");
-                    if (title) {
-                        // Ajoute une heure par défaut (9h à 10h)
-                        const startDateTime = info.dateStr + "T09:00:00";
-                        const endDateTime = info.dateStr + "T10:00:00";
-
-                        fetch('{{ path("calendar_create_event") }}', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                title: title,
-                                start: startDateTime,
-                                end: endDateTime
-                            })
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                calendar.refetchEvents();
-                            } else {
-                                alert("Erreur: " + data.error);
-                            }
-                        })
-                        .catch(err => {
-                            alert("Erreur réseau : " + err);
-                        });
-                    }
+        document.getElementById('eventForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const id = document.getElementById('eventId').value;
+            const title = document.getElementById('eventTitle').value;
+            const description = document.getElementById('eventDescription').value;
+            const start = document.getElementById('eventStart').value;
+            const end = document.getElementById('eventEnd').value;
+            const url = id ? '{{ path("calendar_update_event") }}' : '{{ path("calendar_create_event") }}';
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, title, description, start, end })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('eventModal')).hide();
+                    calendar.refetchEvents();
+                } else {
+                    alert("Erreur: " + data.error);
                 }
             });
-            calendar.render();
         });
-    </script>
+
+        document.getElementById('deleteEventBtn').addEventListener('click', function () {
+            const id = document.getElementById('eventId').value;
+            if (!id) return;
+            if (confirm("Confirmer la suppression ?")) {
+                fetch('{{ path("calendar_delete_event") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        bootstrap.Modal.getInstance(document.getElementById('eventModal')).hide();
+                        calendar.refetchEvents();
+                    } else {
+                        alert("Erreur: " + data.error);
+                    }
+                });
+            }
+        });
+    });
+</script>
 {% endblock %}

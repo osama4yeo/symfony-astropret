@@ -62,5 +62,37 @@ class CalendarController extends AbstractController
         }
     }
     
+    #[Route('/api/calendar/update', name: 'calendar_update_event', methods: ['POST'])]
+    public function updateEvent(Request $request, GoogleCalendarService $googleCalendarService): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+        $data = json_decode($request->getContent(), true);
+
+        try {
+            $googleCalendarService->updateEvent($data['id'], $data);
+            return new JsonResponse(['success' => true]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/api/calendar/delete', name: 'calendar_delete_event', methods: ['POST'])]
+    public function deleteEvent(Request $request, GoogleCalendarService $googleCalendar): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $eventId = $data['id'] ?? null;
+    
+        if (!$eventId) {
+            return new JsonResponse(['success' => false, 'error' => 'ID manquant'], 400);
+        }
+    
+        try {
+            $googleCalendar->deleteEvent($eventId);
+            return new JsonResponse(['success' => true]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }    
 
 }

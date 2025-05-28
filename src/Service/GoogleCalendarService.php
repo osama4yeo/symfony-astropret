@@ -17,21 +17,29 @@ class GoogleCalendarService
         $client->setAuthConfig(__DIR__ . '/../../config/google-credentials.json');
         $client->addScope(Google_Service_Calendar::CALENDAR);
         $client->setAccessType('offline');
-
+        $client->setPrompt('select_account consent');
+    
         $tokenPath = __DIR__ . '/../../config/token.json';
+    
         if (!file_exists($tokenPath)) {
             throw new \Exception('Fichier token.json manquant.');
         }
-
+    
         $accessToken = json_decode(file_get_contents($tokenPath), true);
         $client->setAccessToken($accessToken);
-
+    
+        // ✅ Rafraîchissement automatique
         if ($client->isAccessTokenExpired()) {
-            throw new \Exception('Token expiré. Regénère token.json.');
+            if ($client->getRefreshToken()) {
+                $newToken = $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
+                file_put_contents($tokenPath, json_encode($client->getAccessToken()));
+            } else {
+                throw new \Exception('Token expiré et aucun refresh_token disponible.');
+            }
         }
-
+    
         $this->calendarService = new Google_Service_Calendar($client);
-    }
+    }    
 
     public function getEvents(): array
     {
@@ -47,11 +55,13 @@ class GoogleCalendarService
 
         foreach ($data['items'] ?? [] as $event) {
             $events[] = [
+                'id' => $event['id'],
                 'title' => $event['summary'] ?? 'Sans titre',
                 'start' => $event['start']['dateTime'] ?? $event['start']['date'],
                 'end' => $event['end']['dateTime'] ?? $event['end']['date'],
             ];
         }
+        
 
         return $events;
     }
@@ -74,4 +84,30 @@ class GoogleCalendarService
         $createdEvent = $this->calendarService->events->insert($this->calendarId, $event);
         return $createdEvent->getId();
     }
+
+    public function updateEvent(string $eventId, array $data): void
+    {
+        $event = $this->calendarService->events->get($this->calendarId, $eventId);
+
+        $event->setSummary($data['title']);
+        $event->setDescription($data['description'] ?? '');
+
+        $event->setStart(new \Google_Service_Calendar_EventDateTime([
+            'dateTime' => $data['start'],
+            'timeZone' => 'Europe/Paris',
+        ]));
+
+        $event->setEnd(new \Google_Service_Calendar_EventDateTime([
+            'dateTime' => $data['end'],
+            'timeZone' => 'Europe/Paris',
+        ]));
+
+        $this->calendarService->events->update($this->calendarId, $eventId, $event);
+    }
+
+    public function deleteEvent(string $eventId): void
+    {
+        $this->calendarService->events->delete($this->calendarId, $eventId);
+    }
+
 }
