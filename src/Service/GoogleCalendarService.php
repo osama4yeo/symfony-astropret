@@ -68,22 +68,29 @@ class GoogleCalendarService
 
     public function createEvent(array $data): string
     {
-        $event = new Google_Service_Calendar_Event([
+        $isAllDay = $data['allDay'] ?? false;
+    
+        $event = new \Google_Service_Calendar_Event([
             'summary' => $data['title'],
             'description' => $data['description'] ?? '',
-            'start' => [
+            'start' => $isAllDay ? [
+                'date' => substr($data['start'], 0, 10),
+            ] : [
                 'dateTime' => $data['start'],
                 'timeZone' => 'Europe/Paris',
             ],
-            'end' => [
+            'end' => $isAllDay ? [
+                'date' => date('Y-m-d', strtotime($data['end'] . ' +1 day')), // Google demande le lendemain pour allDay
+            ] : [
                 'dateTime' => $data['end'],
                 'timeZone' => 'Europe/Paris',
             ],
         ]);
-
+    
         $createdEvent = $this->calendarService->events->insert($this->calendarId, $event);
         return $createdEvent->getId();
     }
+    
 
     public function updateEvent(string $eventId, array $data): void
     {

@@ -5,6 +5,21 @@
 {% block body_content %}
 <div class="container mt-4">
     <h2>Gestion des événements (Admin)</h2>
+
+    <form method="post" action="{{ path('calendar_manage') }}" class="mb-3">
+        <label for="ics_url" class="form-label">Importer un calendrier externe (.ics)</label>
+        <div class="d-flex gap-2">
+            <input type="text" name="ics_url" id="ics_url" class="form-control" placeholder="https://exemple.com/agenda.ics" required style="max-width: 400px;">
+            <button type="submit" class="btn btn-secondary">Importer</button>
+        </div>
+    </form>
+
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label }} mt-2">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
     <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#eventModal">
         + Ajouter un événement
     </button>
@@ -31,14 +46,24 @@
                         <textarea class="form-control" id="eventDescription"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label for="eventStart" class="form-label">Date et heure de début</label>
-                        <input type="datetime-local" class="form-control" id="eventStart" required>
+                        <label for="eventDate" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="eventDate" required>
                     </div>
                     <div class="mb-3">
-                        <label for="eventEnd" class="form-label">Date et heure de fin</label>
-                        <input type="datetime-local" class="form-control" id="eventEnd" required>
+                        <input type="checkbox" id="eventAllDay">
+                        <label for="eventAllDay">Toute la journée</label>
                     </div>
-                </div>
+                    <div id="eventTimeFields">
+                        <div class="mb-3">
+                            <label for="eventStartTime" class="form-label">Heure de début</label>
+                            <input type="time" class="form-control" id="eventStartTime">
+                        </div>
+                        <div class="mb-3">
+                            <label for="eventEndTime" class="form-label">Heure de fin</label>
+                            <input type="time" class="form-control" id="eventEndTime">
+                        </div>
+                    </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-danger" id="deleteEventBtn">Supprimer</button>
                     <button type="submit" class="btn btn-success">Enregistrer</button>
@@ -53,8 +78,83 @@
     {{ parent() }}
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet">
     <style>
-        #calendar { max-width: 1000px; margin: auto; }
+        body {
+            background-color: #f8f9fa;
+        }
+
+        h2 {
+            font-weight: 600;
+            color: #343a40;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+    #calendar {
+        max-width: 100%;
+        width: 100%;
+        min-height: 700px;
+        background-color: #ffffff;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+
+
+        .fc-daygrid-event {
+            background-color: #0d6efd !important; /* ou #198754 si tu préfères vert */
+            color: white !important;
+            border: none !important;
+            border-radius: 6px;
+            padding: 2px 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            white-space: normal !important;
+            overflow-wrap: break-word;
+        }
+
+        .fc-daygrid-event .fc-event-title,
+        .fc-daygrid-event .fc-event-time {
+            color: white !important;
+        }
+
+
+
+        .fc-toolbar-title {
+            font-size: 1.4rem;
+            font-weight: 500;
+            color: #343a40;
+        }
+
+        .fc-button {
+            background-color: #0d6efd !important;
+            border: none !important;
+            border-radius: 6px !important;
+            font-size: 0.9rem;
+        }
+
+        .fc-button-primary:not(:disabled):hover {
+            background-color: #0b5ed7 !important;
+        }
+
+        .fc-daygrid-event {
+            background-color: #0b5ed7 !important;
+            border: none !important;
+            border-radius: 6px;
+            padding: 2px 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .alert-warning {
+            max-width: 600px;
+            margin: auto;
+            padding: 10px 20px;
+            font-size: 0.95rem;
+        }
+
     </style>
+
 {% endblock %}
 
 {% block javascripts_page_specific %}
@@ -67,23 +167,42 @@
             locale: 'fr',
             editable: true,
             selectable: true,
+            height: 'auto',
+            headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+            },
             events: '{{ path("calendar_events") }}',
             dateClick: function(info) {
                 document.getElementById('eventId').value = '';
                 document.getElementById('eventTitle').value = '';
                 document.getElementById('eventDescription').value = '';
-                document.getElementById('eventStart').value = info.dateStr + 'T09:00';
-                document.getElementById('eventEnd').value = info.dateStr + 'T10:00';
+                document.getElementById('eventDate').value = info.dateStr;
+                document.getElementById('eventAllDay').checked = false;
+                document.getElementById('eventStartTime').value = '09:00';
+                document.getElementById('eventEndTime').value = '10:00';
+
+                toggleTimeFields(); // mettre à jour l'affichage lors de l'ouverture
+
                 const modal = new bootstrap.Modal(document.getElementById('eventModal'));
                 modal.show();
             },
             eventClick: function(info) {
                 const event = info.event;
+                const start = new Date(event.start);
+                const end = new Date(event.end);
+
                 document.getElementById('eventId').value = event.id;
                 document.getElementById('eventTitle').value = event.title;
                 document.getElementById('eventDescription').value = event.extendedProps.description || '';
-                document.getElementById('eventStart').value = event.start.toISOString().slice(0, 16);
-                document.getElementById('eventEnd').value = event.end.toISOString().slice(0, 16);
+                document.getElementById('eventDate').value = start.toISOString().slice(0, 10);
+                document.getElementById('eventAllDay').checked = event.allDay;
+                document.getElementById('eventStartTime').value = start.toTimeString().slice(0, 5);
+                document.getElementById('eventEndTime').value = end.toTimeString().slice(0, 5);
+
+                toggleTimeFields(); // mettre à jour selon l’état du champ
+
                 const modal = new bootstrap.Modal(document.getElementById('eventModal'));
                 modal.show();
             }
@@ -95,13 +214,26 @@
             const id = document.getElementById('eventId').value;
             const title = document.getElementById('eventTitle').value;
             const description = document.getElementById('eventDescription').value;
-            const start = document.getElementById('eventStart').value;
-            const end = document.getElementById('eventEnd').value;
+            const date = document.getElementById('eventDate').value;
+            const startTime = document.getElementById('eventStartTime').value;
+            const endTime = document.getElementById('eventEndTime').value;
+            const allDay = document.getElementById('eventAllDay').checked;
+
+            let start, end;
+
+            if (allDay) {
+                start = date + "T00:00:00";
+                end = date + "T23:59:00";
+            } else {
+                start = date + "T" + startTime + ":00";
+                end = date + "T" + endTime + ":00";
+            }
+
             const url = id ? '{{ path("calendar_update_event") }}' : '{{ path("calendar_create_event") }}';
             fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, title, description, start, end })
+                body: JSON.stringify({ id, title, description, start, end, allDay })
             })
             .then(res => res.json())
             .then(data => {
@@ -134,6 +266,17 @@
                 });
             }
         });
+
+        // ✅ Affichage conditionnel des heures
+        const allDayCheckbox = document.getElementById('eventAllDay');
+        const timeFields = document.getElementById('eventTimeFields');
+
+        function toggleTimeFields() {
+            timeFields.style.display = allDayCheckbox.checked ? 'none' : 'block';
+        }
+
+        allDayCheckbox.addEventListener('change', toggleTimeFields);
+        toggleTimeFields(); // init au chargement
     });
 </script>
 {% endblock %}
