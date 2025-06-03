@@ -37,15 +37,35 @@
             text-align: center;
             margin-bottom: 30px;
         }
+        
+    #calendar {
+        max-width: 100%;
+        width: 100%;
+        min-height: 700px;
+        background-color: #ffffff;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
 
-        #calendar {
-            max-width: 900px;
-            margin: auto;
-            background-color: #ffffff;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        .fc-daygrid-event {
+            background-color: #0d6efd !important; /* ou #198754 si tu préfères vert */
+            color: white !important;
+            border: none !important;
+            border-radius: 6px;
+            padding: 2px 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            white-space: normal !important;
+            overflow-wrap: break-word;
         }
+
+        .fc-daygrid-event .fc-event-title,
+        .fc-daygrid-event .fc-event-time {
+            color: white !important;
+        }
+
+
 
         .fc-toolbar-title {
             font-size: 1.4rem;
@@ -65,7 +85,7 @@
         }
 
         .fc-daygrid-event {
-            background-color: #198754 !important;
+            background-color: #0b5ed7 !important;
             border: none !important;
             border-radius: 6px;
             padding: 2px 6px;
@@ -74,8 +94,12 @@
         }
 
         .alert-warning {
-            text-align: center;
+            max-width: 600px;
+            margin: auto;
+            padding: 10px 20px;
+            font-size: 0.95rem;
         }
+
     </style>
 
 {% endblock %}
@@ -91,16 +115,51 @@
                 firstDay: 1,
                 events: "{{ path('calendar_events') }}",
 
+                // ✅ UNE SEULE FOIS - barre de navigation complète
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+                },
+
+                // ✅ Traduction des boutons
+                buttonText: {
+                    today:    'Aujourd\'hui',
+                    month:    'Mois',
+                    week:     'Semaine',
+                    day:      'Jour',
+                    list:     'Liste'
+                },
+
+                // ✅ Définition des vues (facultatif mais propre)
+                views: {
+                    dayGridMonth: { buttonText: 'Mois' },
+                    timeGridWeek: { buttonText: 'Semaine' },
+                    timeGridDay: { buttonText: 'Jour' },
+                    listMonth:    { buttonText: 'Liste' }
+                },
+
+                // ✅ Affichage personnalisé du contenu d’un événement
                 eventContent: function(arg) {
                     return {
                         html: '<div class="fc-event-title" style="white-space: normal;">' + arg.event.title + '</div>'
                     };
                 },
 
+                // ✅ Tooltip au survol
                 eventDidMount: function(info) {
-                    var tooltip = document.createElement('div');
+                    const tooltip = document.createElement('div');
                     tooltip.classList.add('fc-event-tooltip');
-                    tooltip.innerText = info.event.title;
+                    tooltip.style.position = 'absolute';
+                    tooltip.style.zIndex = '1000';
+                    tooltip.style.background = 'rgba(0, 0, 0, 0.75)';
+                    tooltip.style.color = '#fff';
+                    tooltip.style.padding = '5px 10px';
+                    tooltip.style.borderRadius = '6px';
+                    tooltip.style.fontSize = '0.8rem';
+                    tooltip.style.display = 'none';
+
+                    tooltip.innerText = info.event.title + (info.event.extendedProps.description ? '\n' + info.event.extendedProps.description : '');
                     document.body.appendChild(tooltip);
 
                     info.el.addEventListener('mouseenter', function(e) {
@@ -109,11 +168,17 @@
                         tooltip.style.top = e.pageY + 'px';
                     });
 
+                    info.el.addEventListener('mousemove', function(e) {
+                        tooltip.style.left = e.pageX + 10 + 'px';
+                        tooltip.style.top = e.pageY + 10 + 'px';
+                    });
+
                     info.el.addEventListener('mouseleave', function () {
                         tooltip.style.display = 'none';
                     });
                 }
             });
+
             calendar.render();
         });
     </script>

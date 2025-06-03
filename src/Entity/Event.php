@@ -29,6 +29,12 @@ class Event
     #[ORM\Column]
     private ?bool $allDay = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $uid = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $source = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -93,4 +99,27 @@ class Event
 
         return $this;
     }
+
+    public function getUid(): ?string
+    {
+        return $this->uid;
+    }
+
+    public function setUid(?string $uid): static
+    {
+        $this->uid = $uid;
+        return $this;
+    }
+
+    public function getSource(): ?string
+    {
+        return $this->source;
+    }
+
+    public function setSource(?string $source): static
+    {
+        $this->source = $source;
+        return $this;
+    }
+
 }
