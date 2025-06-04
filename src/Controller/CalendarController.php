@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use App\Service\IcsImporterService;
 use App\Repository\EventRepository;
+use Doctrine\ORM\EntityManagerInterface;
 
 class CalendarController extends AbstractController
 {
@@ -131,21 +132,57 @@ class CalendarController extends AbstractController
     }
 
     #[Route('/api/calendar/delete', name: 'calendar_delete_event', methods: ['POST'])]
-    public function deleteEvent(Request $request, GoogleCalendarService $googleCalendar): JsonResponse
-    {
+    public function deleteEvent(
+        Request $request,
+        // GoogleCalendarService $googleCalendar, // Tu peux utiliser $this->googleCalendarService
+        EntityManagerInterface $em, // <--- AJOUT IMPORTANT
+        EventRepository $eventRepo
+    ): JsonResponse {
+        // Optionnel: si seul un admin peut supprimer
+        // $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
         $data = json_decode($request->getContent(), true);
         $eventId = $data['id'] ?? null;
-    
-        if (!$eventId) {
-            return new JsonResponse(['success' => false, 'error' => 'ID manquant'], 400);
-        }
-    
-        try {
-            $googleCalendar->deleteEvent($eventId);
-            return new JsonResponse(['success' => true]);
-        } catch (\Exception $e) {
-            return new JsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
-        }
-    }    
 
+        if (!$eventId) {
+            return new JsonResponse(['success' => false, 'error' => 'ID d\'événement manquant.'], 400);
+        }
+
+        try {
+            if (strpos($eventId, 'db_') === 0) {
+                // Suppression d’un événement local (base de données / ICS)
+                $id = str_replace('db_', '', $eventId);
+                $event = $eventRepo->find($id);
+
+                if (!$event) {
+                    return new JsonResponse(['success' => false, 'error' => 'Événement local introuvable.'], 404);
+                }
+
+                $em->remove($event);
+                $em->flush();
+                // Succès implicite si pas d'exception
+                return new JsonResponse(['success' => true, 'message' => 'Événement local supprimé.']);
+
+            } else {
+                // Suppression d’un événement Google Calendar
+                // Utilise le service injecté dans le constructeur pour la cohérence
+                $deleted = $this->googleCalendarService->deleteEvent($eventId);
+
+                if ($deleted) {
+                    return new JsonResponse(['success' => true, 'message' => 'Événement Google Calendar supprimé.']);
+                } else {
+                    // Le service a pu logger l'erreur spécifique
+                    return new JsonResponse(['success' => false, 'error' => 'Échec de la suppression de l\'événement Google Calendar.'], 500);
+                }
+            }
+
+        } catch (\Exception $e) {
+            // Log l'erreur côté serveur pour le débogage
+            // $this->logger->error('Erreur lors de la suppression de l\'événement: ' . $e->getMessage());
+            return new JsonResponse([
+                'success' => false,
+                'error' => 'Erreur serveur lors de la suppression : ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

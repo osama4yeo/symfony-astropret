@@ -1,3 +1,4 @@
+{# templates/registration/register.html.twig #}
 {% extends 'base.html.twig' %}
 
 {% block title %}Inscription{% endblock %}
@@ -9,9 +10,7 @@
                 <h1 class="mb-4 text-center">Créer un compte</h1>
 
                 {{ form_start(registrationForm) }}
-                    {# Affiche les erreurs globales du formulaire s'il y en a #}
-                    {{ form_errors(registrationForm) }}
-
+                    {# ... (autres champs du formulaire : email, prenom, nom, etc. comme avant) ... #}
                     {# Champ Email avec Floating Label #}
                     <div class="form-floating mb-3">
                         {{ form_widget(registrationForm.email, {'attr': {'class': 'form-control', 'placeholder': 'exemple@domaine.com'}}) }}
@@ -41,16 +40,13 @@
                     </div>
 
                     {# Champ Date de Naissance avec Floating Label #}
-                    {# Pour DateType avec widget 'single_text', le placeholder natif du navigateur s'affichera #}
-                    {# Il est important que le label soit APRES le widget pour les floating labels #}
                     <div class="form-floating mb-3">
-                        {{ form_widget(registrationForm.dateNaissance, {'attr': {'class': 'form-control'}}) }} {# Pas besoin de placeholder ici, le type="date" s'en charge #}
+                        {{ form_widget(registrationForm.dateNaissance, {'attr': {'class': 'form-control'}}) }}
                         {{ form_label(registrationForm.dateNaissance) }}
                         {{ form_errors(registrationForm.dateNaissance) }}
                     </div>
 
-                    {# Champ Mot de passe (RepeatedType) - Un peu plus complexe pour les floating labels #}
-                    {# plainPassword est un RepeatedType, il a deux enfants : 'first' et 'second' #}
+                    {# Champ Mot de passe (RepeatedType) #}
                     <div class="form-floating mb-3">
                         {{ form_widget(registrationForm.plainPassword.first, {'attr': {'class': 'form-control', 'placeholder': 'Mot de passe'}}) }}
                         {{ form_label(registrationForm.plainPassword.first) }}
@@ -61,17 +57,20 @@
                         {{ form_label(registrationForm.plainPassword.second) }}
                         {{ form_errors(registrationForm.plainPassword.second) }}
                     </div>
-                    {# Affiche les erreurs globales du champ RepeatedType (ex: si les mots de passe ne correspondent pas) #}
                     {{ form_errors(registrationForm.plainPassword) }}
 
 
-                    {# Champ agreeTerms (CheckboxType) - Les floating labels ne s'appliquent pas bien aux checkboxes de la même manière #}
-                    {# On va utiliser la structure standard de Bootstrap pour les checkboxes #}
+                    {# --- MODIFICATION POUR LE CHAMP agreeTerms --- #}
                     <div class="mb-3 form-check">
                         {{ form_widget(registrationForm.agreeTerms, {'attr': {'class': 'form-check-input'}}) }}
-                        {{ form_label(registrationForm.agreeTerms, null, {'label_attr': {'class': 'form-check-label'}}) }}
+                        {# Personnalisation du label pour inclure le lien #}
+                        <label class="form-check-label" for="{{ registrationForm.agreeTerms.vars.id }}">
+                            J'accepte les <a href="{{ path('app_rgpd_conditions') }}" target="_blank">conditions d'utilisation et la politique RGPD</a>.
+                            {# target="_blank" pour ouvrir dans un nouvel onglet #}
+                        </label>
                         {{ form_errors(registrationForm.agreeTerms) }}
                     </div>
+                    {# --- FIN DE LA MODIFICATION --- #}
 
                     <button type="submit" class="btn btn-primary w-100 mt-3">S'inscrire</button>
                 {{ form_end(registrationForm) }}

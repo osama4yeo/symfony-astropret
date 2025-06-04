@@ -1,0 +1,77 @@
+{# templates/admin/materiel/list.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Administration du Matériel{% endblock %}
+
+{% block body_content %}
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Administration du Matériel</h1>
+            <a href="{{ path('admin_materiel_new') }}" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle-fill" viewBox="0 0 16 16" style="vertical-align: text-bottom;">
+                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
+                </svg>
+                Ajouter un nouveau matériel
+            </a>
+        </div>
+
+        {% include 'partials/_flash_messages.html.twig' ignore missing %}
+
+        {% if materiels is not empty %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Image</th>
+                            <th>Nom</th>
+                            <th>État</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for materiel_item in materiels %}
+                        <tr>
+                            <td>#{{ materiel_item.id }}</td>
+                            <td>
+                                {% if materiel_item.imageFilename %}
+                                    <img src="{{ asset('images/materiel/' ~ materiel_item.imageFilename) }}" alt="{{ materiel_item.nom }}" style="width: 75px; height: auto; object-fit: cover; border-radius: 0.25rem;">
+                                {% else %}
+                                    <img src="{{ asset('images/placeholder_materiel.png') }}" alt="Pas d'image" style="width: 75px; height: auto; object-fit: cover; border-radius: 0.25rem; filter: grayscale(80%);">
+                                {% endif %}
+                            </td>
+                            <td>{{ materiel_item.nom }}</td>
+                            <td>
+                                {% set etat_class = materiel_item.etat == constant('App\\Entity\\Materiel::ETAT_LIBRE') ? 'success' : (materiel_item.etat == constant('App\\Entity\\Materiel::ETAT_LOUE') ? 'warning' : 'secondary') %}
+                                <span class="badge bg-{{ etat_class }}">
+                                    {{ materiel_item.etat | capitalize }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ path('admin_materiel_edit', {'id': materiel_item.id}) }}" class="btn btn-sm btn-primary mb-1" title="Modifier">
+                                    Modifier
+                                </a>
+                                <form method="post" action="{{ path('admin_materiel_delete', {'id': materiel_item.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer \'{{ materiel_item.nom|escape('js') }}\' ?');" style="display: inline-block;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ materiel_item.id) }}">
+                                    <button class="btn btn-sm btn-danger" title="Supprimer">Supprimer</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info" role="alert">
+                Aucun matériel n'a été trouvé. Vous pouvez en ajouter un en utilisant le bouton ci-dessus.
+            </div>
+        {% endif %}
+    </div>
+{% endblock body_content %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .table th, .table td { vertical-align: middle; }
+    </style>
+{% endblock %}

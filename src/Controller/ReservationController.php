@@ -43,7 +43,15 @@ class ReservationController extends AbstractController
     ): Response {
         $reservation = new Reservation();
         $materielPredefini = null;
-        $reservation->setUser($this->getUser());
+        // Associer l'utilisateur connecté à la réservation
+        $user = $this->getUser();
+        if ($user) { // S'assurer que l'utilisateur est bien connecté
+            $reservation->setUser($user);
+        } else {
+            // Gérer le cas où l'utilisateur n'est pas connecté, même si IsGranted devrait le prévenir
+            $this->addFlash('danger', 'Vous devez être connecté pour faire une réservation.');
+            return $this->redirectToRoute('app_login');
+        }
 
         if ($materielId !== null) {
             $materielPredefini = $materielRepository->find($materielId);
@@ -71,15 +79,23 @@ class ReservationController extends AbstractController
                     'materielPredefini' => $materielPredefini
                 ]);
             }
-            $materielActuel = $materielRepository->find($materiel->getId());
+            // Re-vérifier l'état du matériel au moment de la soumission pour éviter les conditions de course
+            $materielActuel = $materielRepository->find($materiel->getId()); // Recharger depuis la BDD
             if ($materielActuel && $materielActuel->getEtat() === Materiel::ETAT_LIBRE) {
                 $materielActuel->setEtat(Materiel::ETAT_LOUE);
+                // $entityManager->persist($materielActuel); // Pas nécessaire si déjà managé et modifié
                 $entityManager->persist($reservation);
                 $entityManager->flush();
                 $this->addFlash('success', sprintf('Réservation pour "%s" enregistrée !', $materielActuel->getNom()));
-                return $this->redirectToRoute('app_materiel_index');
+                return $this->redirectToRoute('app_materiel_index'); // Ou une page "Mes réservations"
             } else {
                 $this->addFlash('danger', sprintf('Le matériel "%s" n\'est plus disponible ou une erreur est survenue.', $materiel?->getNom() ?? 'Inconnu'));
+                // Rediriger ou réafficher le formulaire
+                return $this->render('reservation/new.html.twig', [
+                    'reservation' => $reservation, // Renvoyer l'objet reservation avec les données entrées
+                    'form' => $form->createView(),
+                    'materielPredefini' => $materielPredefini // Garder le matériel pré-défini si c'était le cas
+                ]);
             }
         }
 
@@ -90,6 +106,10 @@ class ReservationController extends AbstractController
         ]);
     }
 
+    // Si vous avez supprimé le dispatch, cette méthode n'est plus appelée par le lien "Location"
+    // et pourrait être supprimée si elle n'est plus utilisée ailleurs.
+    // Si vous voulez que "Location" mène toujours à app_materiel_index pour tous,
+    // modifiez directement le lien dans base.html.twig vers path('app_materiel_index').
     #[Route('/location-redirect', name: 'app_location_dispatch', methods: ['GET'])]
     public function locationDispatch(): Response
     {
@@ -97,10 +117,14 @@ class ReservationController extends AbstractController
             $this->addFlash('warning', 'Veuillez vous connecter pour accéder à la section location.');
             return $this->redirectToRoute('app_login');
         }
-        if ($this->isGranted('ROLE_ADMIN')) {
-            return $this->redirectToRoute('app_materiel_index');
-        }
+        // Si vous voulez que tout le monde (admin et membre) aille à la liste du matériel :
         return $this->redirectToRoute('app_materiel_index');
+
+        // Ancien comportement (admin vers liste de prêts, membre vers liste matériel) :
+        // if ($this->isGranted('ROLE_ADMIN')) {
+        //     return $this->redirectToRoute('admin_reservation_list');
+        // }
+        // return $this->redirectToRoute('app_materiel_index');
     }
 
     #[Route('/admin/reservations/{id}/edit', name: 'admin_reservation_edit', methods: ['GET', 'POST'], requirements: ['id' => '\d+'])]
@@ -133,25 +157,44 @@ class ReservationController extends AbstractController
         ReservationRepository $reservationRepository
     ): Response {
         if ($this->isCsrfTokenValid('delete'.$reservation->getId(), $request->request->get('_token'))) {
-            $materiel = $reservation->getMateriel();
+            $materiel = $reservation->getMateriel(); // Récupérer le matériel avant de supprimer la réservation
+            $reservationId = $reservation->getId(); // Garder l'ID si besoin pour la query (si pas flushé avant)
+
             $entityManager->remove($reservation);
-            $entityManager->flush();
+            $entityManager->flush(); // Flusher la suppression de la réservation d'abord
+
             if ($materiel) {
-                $autresReservationsActives = $reservationRepository->createQueryBuilder('r')
+                $qb = $reservationRepository->createQueryBuilder('r'); // Récupérer le QueryBuilder
+                
+                $autresReservationsActives = $qb
                     ->select('COUNT(r.id)')
                     ->where('r.materiel = :materiel')
-                    ->andWhere('r.dateFin >= :now OR (r.dateDebut <= :now AND r.dateFin >= :now))')
+                    // Utilisation de l'Expression Builder pour la condition OR/AND
+                    ->andWhere(
+                        $qb->expr()->orX(
+                            $qb->expr()->gte('r.dateFin', ':now'),       // r.dateFin >= :now
+                            $qb->expr()->andX(
+                                $qb->expr()->lte('r.dateDebut', ':now'), // ET r.dateDebut <= :now
+                                $qb->expr()->gte('r.dateFin', ':now')    // ET r.dateFin >= :now
+                            )
+                        )
+                    )
+                    // Optionnel: Exclure explicitement la réservation qu'on vient de supprimer si on ne fait pas confiance au timing du flush
+                    // ->andWhere($qb->expr()->neq('r.id', ':deletedReservationId')) 
                     ->setParameter('materiel', $materiel)
                     ->setParameter('now', new \DateTimeImmutable())
+                    // ->setParameter('deletedReservationId', $reservationId) // Si la ligne ci-dessus est décommentée
                     ->getQuery()
                     ->getSingleScalarResult();
+
                 if ($autresReservationsActives == 0) {
                     $materiel->setEtat(Materiel::ETAT_LIBRE);
-                    $entityManager->flush();
+                    // $entityManager->persist($materiel); // Pas besoin si $materiel est déjà managé
+                    $entityManager->flush(); // Sauvegarder le changement d'état du matériel
                     $this->addFlash('info', 'L\'état du matériel "' . $materiel->getNom() . '" a été mis à jour à "libre".');
                 }
             }
-            $this->addFlash('success', 'Réservation supprimée.');
+            $this->addFlash('success', 'Réservation supprimée avec succès.');
         } else {
             $this->addFlash('danger', 'Token CSRF invalide.');
         }
@@ -167,10 +210,10 @@ class ReservationController extends AbstractController
             if ($this->isGranted('ROLE_ADMIN')) {
                 return $this->redirectToRoute('admin_reservation_list');
             }
-            // Adaptez cette redirection si besoin pour les utilisateurs non-admin
             return $this->redirectToRoute('app_home');
         }
 
+        // S'assurer que le template est au bon endroit (admin/reservation/ ou reservation/)
         return $this->render('admin/reservation/map_view.html.twig', [
             'reservation' => $reservation,
         ]);

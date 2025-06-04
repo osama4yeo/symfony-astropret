@@ -45,3 +45,34 @@ main {
     flex-shrink: 0;
 }
 */
+/* J'ai enlevé les marqueurs de conflit Git <<<<<<< HEAD etc. */
+
+
+/* --- NOUVEAUX STYLES AJOUTÉS CI-DESSOUS --- */
+
+/* Styles pour les images carrées */
+.square-image-container {
+    width: 100%; /* Prend la largeur de son parent (la colonne de la carte) */
+    position: relative; 
+}
+
+.square-image {
+    width: 100%; /* Prend toute la largeur du conteneur parent immédiat */
+    height: auto; /* La hauteur s'ajustera automatiquement au ratio d'aspect */
+    aspect-ratio: 1 / 1; /* Force un ratio d'aspect carré (1:1) */
+    object-fit: cover; /* Couvre la zone, rognant si nécessaire pour garder les proportions */
+    display: block; /* Pour éviter les espaces sous l'image */
+}
+
+/* Style spécifique pour les images de matériel dans les cartes */
+.card-materiel-img {
+    /* Hérite de .square-image grâce aux classes multiples sur l'élément img */
+    border-bottom: 1px solid #eee; /* Petite séparation que vous aviez */
+}
+
+/* Style spécifique pour les avatars dans le trombinoscope */
+.avatar-trombino-img {
+    /* Hérite de .square-image */
+    /* Si vous voulez des avatars ronds même dans les cartes carrées (la classe .rounded-circle de Bootstrap le fait déjà): */
+    /* border-radius: 50%; */ 
+}

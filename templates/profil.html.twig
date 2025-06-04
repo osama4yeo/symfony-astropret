@@ -1,44 +1,51 @@
+{# templates/profil.html.twig #}
 {% extends 'base.html.twig' %}
 
 {% block title %}Mon profil{% endblock %}
 
-{# Changement du nom du bloc ici #}
 {% block body_content %}
-    <h1>Mon profil</h1>
+    <div class="container mt-4"> {# Ajout d'un container pour la cohérence #}
+        <h1 class="mb-4">Mon profil</h1> {# mb-4 pour l'espacement #}
 
-    {% if user %}
-        <div class="card mx-auto" style="max-width: 400px;">
-            <div class="card-body text-center">
+        {# --- AJOUT DE L'INCLUDE POUR LES MESSAGES FLASH --- #}
+        {% include 'partials/_flash_messages.html.twig' ignore missing %}
+        {# --- FIN DE L'AJOUT --- #}
 
-                {% if user.avatar %}
-                    <img src="{{ asset('uploads/avatars/' ~ user.avatar) }}" class="avatar-img mb-3" alt="Mon avatar">
-                {% else %}
-                    <img src="{{ asset('/images/default-avatar-icon-of-social-media-user-vector.jpg') }}" class="avatar-img mb-3" alt="Avatar par défaut">
-                {% endif %}
+        {% if user %}
+            <div class="card mx-auto" style="max-width: 400px;">
+                <div class="card-body text-center">
 
-                <h5 class="card-title">{{ user.prenom }} {{ user.nom }}</h5>
-                <p class="card-text">{{ user.email }}</p>
+                    {% if user.avatar %}
+                        <img src="{{ asset('uploads/avatars/' ~ user.avatar) }}" class="avatar-img mb-3" alt="Mon avatar">
+                    {% else %}
+                        <img src="{{ asset('images/default-avatar-icon-of-social-media-user-vector.jpg') }}" class="avatar-img mb-3" alt="Avatar par défaut">
+                        {# Assurez-vous que cette image existe dans public/images/ #}
+                    {% endif %}
 
-            <div class="d-flex justify-content-center gap-2 mt-3">
-                <a href="{{ path('app_logout') }}" class="btn btn-danger">Se déconnecter</a>
-                <a href="{{ path('user_profile_edit') }}" class="btn btn-primary">Modifier mon profil</a>
+                    <h5 class="card-title">{{ user.prenom | default('') }} {{ user.nom | default('') }}</h5> {# Ajout de default('') pour éviter erreur si null #}
+                    <p class="card-text">{{ user.email }}</p>
+                    {# Si vous avez d'autres infos à afficher, comme le téléphone, date de naissance, etc. #}
+                    {# <p class="card-text">Téléphone : {{ user.telephone | default('Non renseigné') }}</p> #}
+                    {# <p class="card-text">Né(e) le : {{ user.dateNaissance ? user.dateNaissance|date('d/m/Y') : 'Non renseigné' }}</p> #}
+
+
+                    <div class="d-flex justify-content-center gap-2 mt-4"> {# mt-4 pour plus d'espace #}
+                        <a href="{{ path('user_profile_edit') }}" class="btn btn-primary">Modifier mon profil</a>
+                        <a href="{{ path('app_logout') }}" class="btn btn-outline-danger">Se déconnecter</a> {# Changé en outline-danger pour moins d'emphase #}
+                    </div>
+                </div>
             </div>
-
-
+        {% else %}
+            {# Ce bloc else est rarement atteint si la route est protégée par IsGranted('ROLE_USER') #}
+            {# Mais c'est une bonne sécurité #}
+            <div class="alert alert-warning" role="alert">
+                Vous devez être connecté pour voir cette page.
             </div>
-        </div>
-    {% else %}
-        <p>Vous devez être connecté pour voir cette page.</p>
-
-        <a href="{{ path('app_login') }}" class="btn btn-outline-primary mb-3">
-            Se connecter
-        </a>
-
-        <a href="{{ path('app_register') }}" class="btn btn-outline-primary mb-3">
-            Créer un nouveau compte
-        </a>
-    {% endif %}
-{% endblock body_content %} {# Nom du bloc mis à jour ici aussi #}
+            <a href="{{ path('app_login') }}" class="btn btn-primary">Se connecter</a>
+            <a href="{{ path('app_register') }}" class="btn btn-outline-secondary ms-2">Créer un compte</a>
+        {% endif %}
+    </div>
+{% endblock body_content %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -48,6 +55,7 @@
             height: 150px;
             object-fit: cover;
             border-radius: 50%;
+            border: 3px solid #eee; /* Optionnel: petite bordure */
         }
     </style>
 {% endblock %}

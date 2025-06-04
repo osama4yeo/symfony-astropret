@@ -12,29 +12,30 @@
         {% if materiels is not empty %}
             <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">
                 {% for materiel_item in materiels %}
-                    <div class="col d-flex align-items-stretch"> {# d-flex et align-items-stretch pour que les cartes remplissent la hauteur de la colonne #}
-                        <div class="card w-100 shadow-sm"> {# w-100 pour que la carte prenne toute la largeur de la colonne #}
+                    <div class="col d-flex align-items-stretch">
+                        <div class="card w-100 shadow-sm">
                             
-                            {# Affichage de l'image #}
+                            {# Affichage de l'image - MODIFIÉ #}
                             {% if materiel_item.imageFilename %}
-                                <img src="{{ asset('images/materiel/' ~ materiel_item.imageFilename) }}" class="card-img-top" alt="{{ materiel_item.nom }}" style="height: 200px; object-fit: cover;">
+                                <img src="{{ asset('images/materiel/' ~ materiel_item.imageFilename) }}" 
+                                     class="card-img-top square-image card-materiel-img" 
+                                     alt="{{ materiel_item.nom }}">
                             {% else %}
-                                {# Image placeholder si aucune image n'est définie pour le matériel #}
-                                <img src="{{ asset('images/placeholder_materiel.png') }}" class="card-img-top" alt="Image non disponible" style="height: 200px; object-fit: cover; filter: grayscale(80%);">
-                                {# Assurez-vous d'avoir une image public/images/placeholder_materiel.png #}
+                                <img src="{{ asset('images/materiel/default_equipment.jpg') }}" 
+                                     class="card-img-top square-image card-materiel-img" 
+                                     alt="Image non disponible" 
+                                     style="filter: grayscale(80%);"> {# Garde le filtre grayscale #}
                             {% endif %}
+                            {# FIN DE LA MODIFICATION DE L'IMAGE #}
 
                             <div class="card-body d-flex flex-column">
                                 <h5 class="card-title">{{ materiel_item.nom }}</h5>
-
                                 <p class="card-text mb-2">
                                     État : 
                                     {% set etat_class = materiel_item.etat == constant('App\\Entity\\Materiel::ETAT_LIBRE') ? 'success' : (materiel_item.etat == constant('App\\Entity\\Materiel::ETAT_LOUE') ? 'warning' : 'secondary') %}
                                     <span class="badge bg-{{ etat_class }}">{{ materiel_item.etat | capitalize }}</span>
                                 </p>
-
-                                {# Bouton d'action en bas de la carte #}
-                                <div class="mt-auto text-center pt-2"> {# mt-auto et pt-2 pour espacement #}
+                                <div class="mt-auto text-center pt-2">
                                     {% if materiel_item.etat == constant('App\\Entity\\Materiel::ETAT_LIBRE') %}
                                         <a href="{{ path('reservation_new', {'materielId': materiel_item.id}) }}" class="btn btn-primary">
                                             Louer cet article
@@ -58,13 +59,17 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    {# Les styles pour .card-img-top et .card-title sont déjà dans style.css ou inline dans base.html.twig,
+       mais vous pouvez garder des styles spécifiques ici si besoin.
+       La classe .card-materiel-img dans style.css s'occupe de la bordure.
+    #}
     <style>
         .card-title {
-            min-height: 2.5rem; /* Ajusté pour potentiellement moins de texte */
-            margin-bottom: 0.5rem; /* Réduit l'espace sous le titre */
+            min-height: 2.5rem; 
+            margin-bottom: 0.5rem; 
         }
-        .card-img-top {
-             border-bottom: 1px solid #eee; /* Petite séparation si l'image a un fond similaire à la carte */
-        }
+        /* .card-img-top {
+             border-bottom: 1px solid #eee; 
+        } A été déplacé dans .card-materiel-img dans style.css */
     </style>
 {% endblock %}
