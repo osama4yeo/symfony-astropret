@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+
+{% block body_content %}
+    <div class="container mt-5">
+        <h1>Notre politique d'utilisation des données</h1>
+        <p><strong>Gestion des prêts et événements de l'association.</strong></p>
+
+        <h2>Politique de Confidentialité</h2>
+
+        <h3>Introduction</h3>
+        <p>
+            Nous prenons très au sérieux la protection de vos données personnelles. Cette
+            politique de confidentialité explique comment nous collectons, utilisons, stockons et
+            protégeons vos informations.
+        </p>
+
+        <h3>Données Collectées</h3>
+        <ul>
+            <li>Nom et prénom</li>
+            <li>Adresse e-mail</li>
+            <li>Numéro de téléphone</li>
+            <li>Adresse postale</li>
+            <li>Informations sur le matériel emprunté</li>
+        </ul>
+
+        <h3>Utilisation des Données</h3>
+        <p>Vos données personnelles sont utilisées pour :</p>
+        <ul>
+            <li>Gérer les prêts de matériel</li>
+            <li>Communiquer avec vous concernant vos emprunts</li>
+            <li>Améliorer nos services</li>
+        </ul>
+
+        <h3>Base Légale du Traitement</h3>
+        <p>
+            Nous traitons vos données personnelles sur la base de votre consentement et pour
+            l'exécution de nos obligations contractuelles envers vous.
+        </p>
+
+        <h3>Droits des Personnes</h3>
+        <p>Vous avez le droit de :</p>
+        <ul>
+            <li>Accéder à vos données personnelles</li>
+            <li>Rectifier vos données si elles sont incorrectes</li>
+            <li>Demander la suppression de vos données</li>
+            <li>Vous opposer au traitement de vos données</li>
+        </ul>
+        <p>
+            Pour exercer ces droits, veuillez nous contacter à l'adresse suivante :
+            <a href="mailto:contact@example.com">contact@example.com</a>
+        </p>
+
+        <h3>Sécurisation des Données</h3>
+        <p>
+            Nous mettons en œuvre des mesures techniques et organisationnelles pour protéger
+            vos données contre tout accès non autorisé, modification, divulgation ou destruction.
+        </p>
+
+        <h3>Notification des Violations de Données</h3>
+        <p>
+            En cas de violation de données, nous nous engageons à notifier la CNIL et, si
+            nécessaire, les personnes concernées dans les meilleurs délais.
+        </p>
+    </div>
+{% endblock %}
+
+{% block javascripts_page_specific %}
+    {{ parent() }}
+    <script src="{{ asset('assets/js/script_accueil.js') }}"></script>
+{% endblock %}
