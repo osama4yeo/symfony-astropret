@@ -6,18 +6,15 @@
     <div class="container mt-4">
         <h2>Calendrier des événements</h2>
 
-        {# 🔐 Affichage conditionnel pour les admins #}
-        {% if is_granted('ROLE_ADMIN') %}
-            <div class="text-end mb-3">
-                <a href="{{ path('calendar_manage') }}" class="btn btn-primary">
-                    Accéder à la gestion des événements
-                </a>
-            </div>
-        {% else %}
-            <div class="alert alert-warning text-center">
-                Vous n'avez pas accès à la gestion des événements.
-            </div>
-        {% endif %}
+{# 🔐 Affichage conditionnel pour les admins #}
+{% if is_granted('ROLE_ADMIN') %}
+    <div class="text-end mb-3">
+        <a href="{{ path('calendar_manage') }}" class="btn btn-primary">
+            Gestion des événements
+        </a>
+    </div>
+{% endif %}
+
 
         <div id="calendar"></div>
     </div>
