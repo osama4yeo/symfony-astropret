@@ -1,22 +1,141 @@
-{% extends 'base.html.twig' %} {# <--- AJOUTER CETTE LIGNE #}
+{# templates/home/index.html.twig #}
+{% extends 'base.html.twig' %}
 
-{% block title %}Accueil - Astropret{% endblock %} {# <--- AJOUTER ET PERSONNALISER LE TITRE #}
+{% block title %}Accueil - Astropret{% endblock %}
 
 {% block stylesheets %}
-    {{ parent() }} {# Pour inclure les styles de base.html.twig #}
-    <link rel="stylesheet" href="{{ asset('assets/css/styles_accueil.css') }}"> {# Exemple #}
+    {{ parent() }}
+    <style>
+        .gallery-item .card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .gallery-item .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+        }
+        .gallery-img { /* Style pour les images dans la grille */
+            width: 100%;
+            height: 200px; 
+            object-fit: cover; 
+        }
+        .card-title-gallery {
+            min-height: 3.5rem; 
+        }
+        .card-text-gallery {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+    </style>
 {% endblock %}
 
-{% block body_content %} {# <--- AJOUTER CE BLOC ET METTRE LE CONTENU SPÉCIFIQUE ICI #}
-    <div class="container mt-5"> {# Tu avais déjà un container, c'est bien #}
-        <h1>Bienvenue sur AstroPrêt</h1>
-        <p>Gestion des prêts et événements de l'association.</p>
-        {# Tu peux ajouter plus de contenu ici si besoin #}
+{% block body_content %}
+    <div class="container mt-4">
+        <div class="text-center mb-5">
+            <h1 class="display-4">Galerie Astronomique</h1>
+            <p class="lead">Découvrez la beauté de l'univers à travers notre sélection d'images.</p>
+        </div>
+
+        {# Assurez-vous que les chemins _thumb et _full sont corrects et que les images existent #}
+        {% set gallery_images = [
+            {
+                'thumb': asset('images/gallery/nebuleuse_orion_full.jpg'),  
+                'full': asset('images/gallery/nebuleuse_orion_full.jpg'),    
+                'title': 'Nébuleuse d\'Orion',
+                'description': 'Une magnifique région de formation d\'étoiles visible à l\'œil nu.'
+            },
+            {
+                'thumb': asset('images/gallery/galaxie_andromede_full.jpg'),
+                'full': asset('images/gallery/galaxie_andromede_full.jpg'),
+                'title': 'Galaxie d\'Andromède',
+                'description': 'Notre plus proche voisine galactique majeure.'
+            },
+            {
+                'thumb': asset('images/gallery/pleiades_full.jpg'),
+                'full': asset('images/gallery/pleiades_full.jpg'),
+                'title': 'Les Pléiades (M45)',
+                'description': 'Un amas ouvert d\'étoiles jeunes et bleues, aussi connu sous le nom des Sept Sœurs.'
+            },
+            {
+                'thumb': asset('images/gallery/lune_cratere_full.jpg'),
+                'full': asset('images/gallery/lune_cratere_full.jpg'),
+                'title': 'Cratère lunaire Tycho',
+                'description': 'Un cratère d\'impact proéminent sur la Lune, visible lors de la pleine lune.'
+            },
+            {
+                'thumb': asset('images/gallery/jupiter_grt_full.jpg'),
+                'full': asset('images/gallery/jupiter_grt_full.jpg'),
+                'title': 'Jupiter et sa Grande Tache Rouge',
+                'description': 'La plus grande planète du système solaire avec sa tempête anticyclonique géante.'
+            },
+            {
+                'thumb': asset('images/gallery/saturne_anneaux_full.jpg'),
+                'full': asset('images/gallery/saturne_anneaux_full.jpg'),
+                'title': 'Saturne et ses anneaux',
+                'description': 'Célèbre pour son système d\'anneaux spectaculaire composé de glace et de roche.'
+            },
+            {
+                'thumb': asset('images/gallery/voie_lactee_full.jpg'),
+                'full': asset('images/gallery/voie_lactee_full.jpg'),
+                'title': 'La Voie Lactée',
+                'description': 'Notre galaxie vue de l\'intérieur, une bande lumineuse d\'étoiles.'
+            },
+            {
+                'thumb': asset('images/gallery/nebuleuse_tete_cheval_full.jpg'),
+                'full': asset('images/gallery/nebuleuse_tete_cheval_full.jpg'),
+                'title': 'Nébuleuse de la Tête de Cheval',
+                'description': 'Une nébuleuse obscure dans la constellation d\'Orion.'
+            },
+            {
+                'thumb': asset('images/gallery/mars_olympus_mons_full.jpg'),
+                'full': asset('images/gallery/mars_olympus_mons_full.jpg'),
+                'title': 'Le Mont Olympe sur Mars',
+                'description': 'Le plus grand volcan connu du système solaire.'
+            },
+            {
+                'thumb': asset('images/gallery/nebuleuse_carina_full.jpg'),
+                'full': asset('images/gallery/nebuleuse_carina_full.jpg'),
+                'title': 'Nébuleuse de la Carène',
+                'description': 'Une vaste région de formation d\'étoiles dans l\'hémisphère sud.'
+            },
+            {
+                'thumb': asset('images/gallery/comete_neowise_full.jpg'),
+                'full': asset('images/gallery/comete_neowise_full.jpg'),
+                'title': 'Comète NEOWISE (2020)',
+                'description': 'Une comète spectaculaire visible à l\'œil nu en 2020.'
+            },
+            {
+                'thumb': asset('images/gallery/eclipse_solaire_full.jpg'),
+                'full': asset('images/gallery/eclipse_solaire_full.jpg'),
+                'title': 'Éclipse solaire totale',
+                'description': 'Lorsque la Lune passe directement entre le Soleil et la Terre.'
+            }
+        ] %}
+
+        {% if gallery_images is not empty %}
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+                {% for image_data in gallery_images %}
+                    <div class="col gallery-item">
+                        <div class="card h-100 shadow-sm">
+                            {# Le lien pointe vers l'image pleine résolution pour Lightbox #}
+                            <a href="{{ image_data.full }}" data-lightbox="astro-gallery" data-title="{{ image_data.title ~ (image_data.description ? ' - ' ~ image_data.description : '') }}">
+                                {# L'image affichée dans la grille est la miniature #}
+                                <img src="{{ image_data.thumb }}" class="card-img-top gallery-img" alt="{{ image_data.title }}">
+                            </a>
+                            <div class="card-body">
+                                <h5 class="card-title card-title-gallery">{{ image_data.title }}</h5>
+                                <p class="card-text card-text-gallery">{{ image_data.description }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-center">Aucune image à afficher dans la galerie pour le moment.</p>
+        {% endif %}
     </div>
 {% endblock body_content %}
 
-
 {% block javascripts_page_specific %}
     {{ parent() }}
-    <script src="{{ asset('assets/js/script_accueil.js') }}"></script> {# Exemple #}
+    {# Aucun script spécifique supplémentaire n'est requis ici pour Lightbox2 s'il est bien inclus dans base.html.twig #}
 {% endblock %}

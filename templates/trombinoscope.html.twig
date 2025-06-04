@@ -1,56 +1,61 @@
+{# templates/user/trombinoscope.html.twig #}
 {% extends 'base.html.twig' %}
 
 {% block title %}Trombinoscope{% endblock %}
 
-{# Changement du nom du bloc ici #}
 {% block body_content %}
-    <h1>Trombinoscope</h1>
-    {# Assure-toi que la route 'user_profile' existe et que l'utilisateur est connecté pour ce lien #}
+<div class="container mt-4"> {# Ajout d'un container pour un meilleur espacement #}
+    <h1 class="mb-4">Trombinoscope</h1> {# Ajout de marge en bas du titre #}
 
-    <div class="row">
-        {% for user_item in users %} {# J'ai renommé la variable de boucle pour éviter la confusion avec 'user' de app.user #}
-            <div class="col-md-3" style="margin-bottom: 20px;">
-                <div class="card">
-                    {% if user_item.avatar %}
-                        {# Assure-toi que le chemin 'uploads/avatars/' est correct et que user_item.avatar contient juste le nom du fichier #}
-                        <img src="{{ asset('uploads/avatars/' ~ user_item.avatar) }}" class="card-img-top avatar-img" alt="Avatar de {{ user_item.prenom }}">
-                    {% else %}
-                        <img src="{{ asset('images/default-avatar-icon-of-social-media-user-vector.jpg') }}" class="card-img-top avatar-img" alt="Avatar par défaut">
-                    {% endif %}
-
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4"> {# Grille Bootstrap pour la responsivité #}
+        {% for user_item in users %}
+            <div class="col d-flex align-items-stretch">
+                <div class="card w-100 text-center shadow-sm"> {# text-center pour le contenu de la carte, w-100 #}
+                    <div class="p-3"> {# Ajout d'un padding autour de l'image pour ne pas qu'elle touche les bords de la carte #}
+                        {% if user_item.avatar %}
+                            <img src="{{ asset('uploads/avatars/' ~ user_item.avatar) }}" 
+                                 class="img-fluid square-image avatar-trombino-img rounded-circle mx-auto" {# img-fluid, square-image, avatar-trombino-img, rounded-circle, mx-auto #}
+                                 alt="Avatar de {{ user_item.prenom }}"
+                                 style="max-width: 150px;"> {# Limiter la taille maximale de l'avatar si besoin #}
+                        {% else %}
+                            <img src="{{ asset('images/default-avatar-icon-of-social-media-user-vector.jpg') }}" 
+                                 class="img-fluid square-image avatar-trombino-img rounded-circle mx-auto" 
+                                 alt="Avatar par défaut"
+                                 style="max-width: 150px; filter: grayscale(80%);">
+                        {% endif %}
+                    </div>
                     <div class="card-body">
-                        {# Utilise les propriétés prenom et nom si elles existent sur ton entité User #}
                         <h5 class="card-title">{{ user_item.prenom }} {{ user_item.nom }}</h5>
-                        {# autres infos pour plus tard... #}
                     </div>
                 </div>
             </div>
         {% else %}
-            <p>Aucun utilisateur trouvé.</p>
+            <div class="col">
+                <p class="alert alert-info">Aucun utilisateur trouvé.</p>
+            </div>
         {% endfor %}
     </div>
-{% endblock body_content %} {# Nom du bloc mis à jour ici aussi #}
+</div>
+{% endblock body_content %}
 
 {% block stylesheets %}
-    {{ parent() }} {# Pour inclure les styles de base.html.twig #}
+    {{ parent() }}
+    {# Les styles spécifiques pour .card et .card-body peuvent rester ici si vous le souhaitez,
+       ou être déplacés dans style.css.
+       La classe .avatar-trombino-img dans style.css s'occupe de la forme carrée.
+    #}
     <style>
         .card {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            transition: 0.3s;
+            /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */ /* Déjà dans la classe shadow-sm de Bootstrap */
+            /* transition: 0.3s; */ /* Peut être ajouté si vous voulez un effet au survol global */
         }
-        .card:hover {
+        /* .card:hover {
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-        }
-        .avatar-img {
-            width: 100%; /* Pour qu'elle prenne la largeur de la card-img-top */
-            height: 200px; /* Hauteur fixe pour l'uniformité, ajuste selon tes besoins */
-            object-fit: cover; /* S'assure que l'image couvre sans se déformer */
-            /* border-radius: 50%; Si tu veux des avatars ronds même dans les cartes */
-            /* margin: 0 auto; */
-            /* display: block; */
-        }
-        .card-body {
-            text-align: center; /* Pour centrer le texte dans la carte */
-        }
+        } */
+        /* .avatar-img { ... } a été remplacé par .square-image et .avatar-trombino-img dans style.css */
+        
+        /* .card-body {
+            text-align: center;
+        } Déjà géré par text-center sur la carte */
     </style>
 {% endblock %}

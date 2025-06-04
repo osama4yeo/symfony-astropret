@@ -2,82 +2,108 @@
 
 namespace App\Controller;
 
-use App\Entity\Materiel; // Importer l'entité Materiel
-use App\Form\MaterielType; // Importer le formulaire (à créer si ce n'est pas fait)
-use App\Repository\MaterielRepository; // Importer le Repository
-use Doctrine\ORM\EntityManagerInterface; // Importer l'Entity Manager
+use App\Entity\Materiel;
+use App\Form\MaterielType;
+use App\Repository\MaterielRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Request; // Importer Request
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route; // Utilisation des annotations/attributs
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/materiel')] // Préfixe de route pour toutes les actions de ce contrôleur
-final class MaterielController extends AbstractController
+class MaterielController extends AbstractController
 {
     /**
-     * Affiche la liste de tous les matériels.
+     * Affiche la liste publique du matériel pour les utilisateurs.
      */
-    #[Route('/', name: 'app_materiel_index', methods: ['GET'])]
-    public function index(MaterielRepository $materielRepository): Response
+    #[Route('/materiel', name: 'app_materiel_index', methods: ['GET'])]
+    public function indexPublic(MaterielRepository $materielRepository): Response
     {
-        // Récupérer tous les matériels via le repository
-        $materiels = $materielRepository->findAll();
-
-        // Rendre la vue Twig en passant la liste des matériels
+        // Ce template est pour l'affichage public, il est bien dans templates/materiel/index.html.twig
         return $this->render('materiel/index.html.twig', [
-            'materiels' => $materiels,
+            'materiels' => $materielRepository->findAll(),
+        ]);
+    }
+
+    /**
+     * Affiche la liste des matériels pour l'ADMINISTRATION.
+     */
+    #[Route('/admin/materiel', name: 'admin_materiel_list', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function adminList(MaterielRepository $materielRepository): Response
+    {
+        // --- MODIFICATION DU CHEMIN DU TEMPLATE ---
+        return $this->render('materiel/list.html.twig', [ // Au lieu de 'admin/materiel/list.html.twig'
+            'materiels' => $materielRepository->findAll(),
         ]);
     }
 
     /**
      * Affiche le formulaire pour créer un nouveau matériel et traite sa soumission.
      */
-    #[Route('/new', name: 'app_materiel_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
-    {
-        // Créer une nouvelle instance de Materiel
+    #[Route('/admin/materiel/new', name: 'admin_materiel_new', methods: ['GET', 'POST'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function new(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        SluggerInterface $slugger,
+        string $materielsDirectory
+    ): Response {
         $materiel = new Materiel();
-        // Créer le formulaire basé sur MaterielType et lié à l'instance $materiel
         $form = $this->createForm(MaterielType::class, $materiel);
-        // Traiter la requête HTTP entrante
         $form->handleRequest($request);
 
-        // Vérifier si le formulaire a été soumis et est valide
         if ($form->isSubmitted() && $form->isValid()) {
-            // Pas besoin de $entityManager->persist($materiel); car il est nouveau
-            // Mais l'ajouter ne pose pas de problème et est une bonne pratique uniforme
-            $entityManager->persist($materiel);
+            /** @var UploadedFile|null $imageFile */
+            $imageFile = $form->get('imageFile')->getData();
 
-            // Sauvegarder le nouveau matériel en base de données
+            if ($imageFile) {
+                $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $slugger->slug($originalFilename);
+                $newFilename = $safeFilename.'-'.uniqid().'.'.$imageFile->guessExtension();
+
+                try {
+                    $imageFile->move($materielsDirectory, $newFilename);
+                    $materiel->setImageFilename($newFilename);
+                } catch (FileException $e) {
+                    $this->addFlash('danger', 'Erreur lors de l\'upload de l\'image : ' . $e->getMessage());
+                    // --- MODIFICATION DU CHEMIN DU TEMPLATE ---
+                    return $this->render('materiel/new.html.twig', [ // Au lieu de 'admin/materiel/new.html.twig'
+                        'materiel' => $materiel,
+                        'form' => $form->createView(),
+                    ]);
+                }
+            }
+
+            $entityManager->persist($materiel);
             $entityManager->flush();
 
-            // Ajouter un message flash pour informer l'utilisateur du succès
-            $this->addFlash('success', 'Matériel ajouté avec succès !');
-
-            // Rediriger vers la liste des matériels (ou vers la page de détails du nouveau matériel)
-            return $this->redirectToRoute('app_materiel_index', [], Response::HTTP_SEE_OTHER);
-            // Ou rediriger vers la page de détails :
-            // return $this->redirectToRoute('app_materiel_show', ['id' => $materiel->getId()]);
+            $this->addFlash('success', 'Nouveau matériel ajouté avec succès !');
+            return $this->redirectToRoute('admin_materiel_list', [], Response::HTTP_SEE_OTHER);
         }
 
-        // Si la méthode est GET ou si le formulaire n'est pas valide, afficher le formulaire
-        return $this->render('materiel/index.html.twig', [
-            'materiel' => $materiel, // Optionnel, si la vue en a besoin
-            'form' => $form->createView(), // Passer la vue du formulaire au template
+        // --- MODIFICATION DU CHEMIN DU TEMPLATE ---
+        return $this->render('materiel/new.html.twig', [ // Au lieu de 'admin/materiel/new.html.twig'
+            'materiel' => $materiel,
+            'form' => $form->createView(),
         ]);
     }
 
     /**
-     * Affiche les détails d'un matériel spécifique.
-     * Utilisation du ParamConverter : Symfony trouve automatiquement le Materiel basé sur {id}
+     * Affiche les détails d'un matériel spécifique (ADMIN).
+     * Si vous n'utilisez pas ce template de show admin, vous pouvez supprimer cette action.
      */
-    #[Route('/{id}', name: 'app_materiel_show', methods: ['GET'], requirements: ['id' => '\d+'])]
+    #[Route('/admin/materiel/{id}', name: 'admin_materiel_show', methods: ['GET'], requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function show(Materiel $materiel): Response
     {
-        // Si l'id ne correspond à aucun Materiel, Symfony lève une erreur 404 automatiquement.
-        // Il n'est donc pas nécessaire de vérifier si $materiel est null ici.
-
-        return $this->render('materiel/show.html.twig', [
+        // --- MODIFICATION DU CHEMIN DU TEMPLATE ---
+        return $this->render('materiel/show.html.twig', [ // Au lieu de 'admin/materiel/show.html.twig'
+                                                        // Assurez-vous que ce fichier existe dans templates/materiel/
             'materiel' => $materiel,
         ]);
     }
@@ -85,27 +111,50 @@ final class MaterielController extends AbstractController
     /**
      * Affiche le formulaire pour modifier un matériel existant et traite sa soumission.
      */
-    #[Route('/{id}/edit', name: 'app_materiel_edit', methods: ['GET', 'POST'], requirements: ['id' => '\d+'])]
-    public function edit(Request $request, Materiel $materiel, EntityManagerInterface $entityManager): Response
-    {
-        // Le ParamConverter a déjà chargé le $materiel basé sur {id}
-        // Créer le formulaire basé sur MaterielType et lié au matériel existant
+    #[Route('/admin/materiel/{id}/edit', name: 'admin_materiel_edit', methods: ['GET', 'POST'], requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function edit(
+        Request $request,
+        Materiel $materiel,
+        EntityManagerInterface $entityManager,
+        SluggerInterface $slugger,
+        string $materielsDirectory
+    ): Response {
+        $oldImageFilename = $materiel->getImageFilename();
         $form = $this->createForm(MaterielType::class, $materiel);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // $materiel est automatiquement mis à jour par le handleRequest
-            // Pas besoin de persist() pour un objet déjà géré par Doctrine
-            $entityManager->flush(); // Sauvegarder les modifications
+            /** @var UploadedFile|null $imageFile */
+            $imageFile = $form->get('imageFile')->getData();
 
+            if ($imageFile) {
+                $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $slugger->slug($originalFilename);
+                $newFilename = $safeFilename.'-'.uniqid().'.'.$imageFile->guessExtension();
+
+                try {
+                    $imageFile->move($materielsDirectory, $newFilename);
+                    $materiel->setImageFilename($newFilename);
+                    if ($oldImageFilename && $oldImageFilename !== $newFilename && file_exists($materielsDirectory . '/' . $oldImageFilename)) {
+                        @unlink($materielsDirectory . '/' . $oldImageFilename);
+                    }
+                } catch (FileException $e) {
+                    $this->addFlash('danger', 'Erreur lors de l\'upload de la nouvelle image : ' . $e->getMessage());
+                    // --- MODIFICATION DU CHEMIN DU TEMPLATE ---
+                    return $this->render('materiel/edit.html.twig', [ // Au lieu de 'admin/materiel/edit.html.twig'
+                        'materiel' => $materiel,
+                        'form' => $form->createView(),
+                    ]);
+                }
+            }
+            $entityManager->flush();
             $this->addFlash('success', 'Matériel mis à jour avec succès !');
-
-            return $this->redirectToRoute('app_materiel_index', [], Response::HTTP_SEE_OTHER);
-            // Ou rediriger vers la page de détails :
-            // return $this->redirectToRoute('app_materiel_show', ['id' => $materiel->getId()]);
+            return $this->redirectToRoute('admin_materiel_list', [], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->render('materiel/edit.html.twig', [
+        // --- MODIFICATION DU CHEMIN DU TEMPLATE ---
+        return $this->render('materiel/edit.html.twig', [ // Au lieu de 'admin/materiel/edit.html.twig'
             'materiel' => $materiel,
             'form' => $form->createView(),
         ]);
@@ -113,22 +162,31 @@ final class MaterielController extends AbstractController
 
     /**
      * Supprime un matériel.
+     * (Pas de rendu de template ici, donc pas de changement de chemin)
      */
-    #[Route('/{id}', name: 'app_materiel_delete', methods: ['POST'], requirements: ['id' => '\d+'])]
-    public function delete(Request $request, Materiel $materiel, EntityManagerInterface $entityManager): Response
-    {
-        // Protection CSRF importante pour les suppressions
-        // 'delete'.$materiel->getId() est le nom du token attendu
+    #[Route('/admin/materiel/{id}/delete', name: 'admin_materiel_delete', methods: ['POST'], requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function delete(
+        Request $request,
+        Materiel $materiel,
+        EntityManagerInterface $entityManager,
+        string $materielsDirectory
+    ): Response {
         if ($this->isCsrfTokenValid('delete'.$materiel->getId(), $request->request->get('_token'))) {
-            $entityManager->remove($materiel); // Préparer la suppression
-            $entityManager->flush(); // Exécuter la suppression en BDD
-
+            $imageFilename = $materiel->getImageFilename();
+            $entityManager->remove($materiel);
+            $entityManager->flush();
+            if ($imageFilename && file_exists($materielsDirectory.'/'.$imageFilename)) {
+                try {
+                    unlink($materielsDirectory.'/'.$imageFilename);
+                } catch (\Exception $e) {
+                    $this->addFlash('warning', 'Le matériel a été supprimé, mais une erreur est survenue lors de la suppression du fichier image.');
+                }
+            }
             $this->addFlash('success', 'Matériel supprimé avec succès.');
         } else {
             $this->addFlash('error', 'Token CSRF invalide.');
         }
-
-
-        return $this->redirectToRoute('app_materiel_index', [], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('admin_materiel_list', [], Response::HTTP_SEE_OTHER);
     }
 }
