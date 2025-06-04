@@ -49,6 +49,7 @@
             overflow-x: auto;
         }
 
+        /* Styles des événements */
         .fc-daygrid-event {
             background-color: #0b5ed7 !important;
             color: white !important;
@@ -66,12 +67,15 @@
             color: white !important;
         }
 
+        /* Style du titre du calendrier (ex: Juin 2024) */
         .fc-toolbar-title {
             font-size: 1.4rem;
             font-weight: 500;
             color: #343a40;
+            text-transform: capitalize; /* MODIFIÉ de uppercase à capitalize */
         }
 
+        /* Styles des boutons FullCalendar */
         .fc-button {
             background-color: #0d6efd !important;
             border: none !important;
@@ -83,6 +87,30 @@
             background-color: #0b5ed7 !important;
         }
 
+        /* Style des en-têtes de jours (Lundi, Mardi, ...) */
+        .fc-col-header-cell-cushion { 
+            color: black !important;
+            text-decoration: none !important;
+        }
+
+        /* Styles pour les numéros de jour en noir et sans soulignement (GLOBAL) - AJOUTÉ */
+        .fc-daygrid-day-number {
+            color: black !important;
+            text-decoration: none !important;
+        }
+        /* Pour les vues semaine/jour si besoin - AJOUTÉ */
+        .fc-timegrid-axis-cushion,
+        .fc-timegrid-slot-label {
+            color: black !important;
+            text-decoration: none !important;
+        }
+        /* S'assurer que les liens à l'intérieur des jours sont aussi stylés - AJOUTÉ */
+        .fc-daygrid-day-frame a { 
+            color: black !important;
+            text-decoration: none !important;
+        }
+
+
         .alert-warning {
             max-width: 600px;
             margin: auto;
@@ -90,7 +118,7 @@
             font-size: 0.95rem;
         }
 
-        /* ✅ Ajout de RESPONSIVE sans toucher au style général */
+        /* --- SECTION RESPONSIVE --- */
         @media (max-width: 768px) {
             #calendar {
                 padding: 10px;
@@ -107,7 +135,11 @@
             }
 
             .fc-toolbar-title {
-                font-size: 1.2rem;
+                font-size: 1.2rem; 
+                /* text-transform: capitalize; est hérité de la règle générale.
+                   Si tu voulais ex: TOUT_MAJUSCULE sur mobile, tu ajouterais text-transform: uppercase; ici.
+                   Le text-transform: uppercase; qui était ici a été retiré car il était redondant ou conflictuel avec le capitalize général.
+                */
             }
 
             .fc-button {
@@ -119,10 +151,24 @@
                 font-size: 0.75rem;
                 padding: 2px 4px;
             }
+
+            .fc-col-header-cell-cushion { /* Cible le contenu de l'en-tête des jours */
+                font-size: 0.7em !important; /* Réduit la taille de la police. Ajuste la valeur. */
+                padding: 2px 1px !important; /* Réduit le padding interne. Ajuste. */
+                line-height: 1.2; 
+            }
+
+            /* Optionnel: Si les jours sont encore trop serrés AVANT que le JS ne change le format */
+            .fc-theme-standard .fc-scrollgrid th,
+            .fc-theme-standard .fc-col-header-cell {
+                padding-left: 1px !important;
+                padding-right: 1px !important;
+            }
+
+            /* Les styles pour .fc-daygrid-day-number sont maintenant globaux et s'appliquent aussi ici. */
+            /* Si tu avais besoin d'un style *différent* pour les numéros sur mobile, tu le mettrais ici. */
         }
-
     </style>
-
 {% endblock %}
 
 {% block javascripts_page_specific %}
@@ -130,10 +176,21 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const calendarEl = document.getElementById('calendar');
+            // Fonction pour déterminer le format des en-têtes de jour
+            function getDayHeaderFormat() {
+                if (window.innerWidth < 576) { // Breakpoint où tu veux passer aux abréviations
+                    return { weekday: 'short' }; // 'short' (Lun) ou 'narrow' (L)
+                } else {
+                    return { weekday: 'long' };  // 'Lundi'
+                }
+            }
+
             const calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 locale: 'fr',
                 firstDay: 1,
+                dayHeaderFormat: getDayHeaderFormat(),
+                dayHeaderFormat: { weekday: 'long' },
                 events: "{{ path('calendar_events') }}",
 
                 // ✅ UNE SEULE FOIS - barre de navigation complète

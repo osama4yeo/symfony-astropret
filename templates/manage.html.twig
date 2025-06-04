@@ -100,6 +100,7 @@
             overflow-x: auto;
         }
 
+        /* Styles des événements */
         .fc-daygrid-event {
             background-color: #0b5ed7 !important;
             color: white !important;
@@ -117,12 +118,15 @@
             color: white !important;
         }
 
+        /* Style du titre du calendrier (ex: Juin 2024) */
         .fc-toolbar-title {
             font-size: 1.4rem;
             font-weight: 500;
             color: #343a40;
+            text-transform: capitalize; 
         }
 
+        /* Styles des boutons FullCalendar */
         .fc-button {
             background-color: #0d6efd !important;
             border: none !important;
@@ -134,15 +138,36 @@
             background-color: #0b5ed7 !important;
         }
 
-        .alert-warning {
+        /* Style des en-têtes de jours (Lundi, Mardi, ...) */
+        .fc-col-header-cell-cushion {
+            color: black !important;
+            text-decoration: none !important;
+        }
+
+        /* Styles pour les numéros de jour en noir et sans soulignement (GLOBAL) */
+        .fc-daygrid-day-number {
+            color: black !important;
+            text-decoration: none !important;
+        }
+        .fc-timegrid-axis-cushion,
+        .fc-timegrid-slot-label {
+            color: black !important;
+            text-decoration: none !important;
+        }
+        .fc-daygrid-day-frame a { 
+            color: black !important;
+            text-decoration: none !important;
+        }
+
+        .alert-warning { /* Si tu as cet élément */
             max-width: 600px;
             margin: auto;
             padding: 10px 20px;
             font-size: 0.95rem;
         }
 
-        /* ✅ Ajout de RESPONSIVE sans toucher au style général */
-        @media (max-width: 768px) {
+        /* --- SECTION RESPONSIVE --- */
+        @media (max-width: 768px) { /* Ou le breakpoint où tu veux que ça change, ex: 576px pour correspondre au JS */
             #calendar {
                 padding: 10px;
             }
@@ -158,7 +183,7 @@
             }
 
             .fc-toolbar-title {
-                font-size: 1.2rem;
+                font-size: 1.2rem; 
             }
 
             .fc-button {
@@ -170,28 +195,39 @@
                 font-size: 0.75rem;
                 padding: 2px 4px;
             }
+            
+            /* Styles pour les en-têtes de jours sur petits écrans */
+            .fc-col-header-cell-cushion {
+                font-size: 0.7em !important; 
+                padding: 2px 1px !important; 
+                line-height: 1.2; 
+            }
 
+            .fc-theme-standard .fc-scrollgrid th,
+            .fc-theme-standard .fc-col-header-cell {
+                padding-left: 1px !important;
+                padding-right: 1px !important;
+            }
+            
+            /* Styles pour le contenu des événements (si tu les avais défini ici pour manage.html.twig) */
             .fc-event-custom {
-    white-space: normal;
-    overflow-wrap: break-word;
-    word-break: break-word;
-}
+                white-space: normal;
+                overflow-wrap: break-word;
+                word-break: break-word;
+            }
 
-.fc-event-title,
-.fc-event-time {
-    white-space: normal !important;
-    overflow-wrap: break-word !important;
-    word-break: break-word !important;
-    display: block !important;
-    width: 100% !important;
-    text-align: left !important;
-    color: white !important;
-}
-
+            .fc-event-title,
+            .fc-event-time { 
+                white-space: normal !important;
+                overflow-wrap: break-word !important;
+                word-break: break-word !important;
+                display: block !important;
+                width: 100% !important;
+                text-align: left !important;
+                color: white !important;
+            }
         }
-
     </style>
-
 {% endblock %}
 
 {% block javascripts_page_specific %}
@@ -199,29 +235,41 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const calendarEl = document.getElementById('calendar');
+
+        // Fonction pour déterminer le format des en-têtes de jour
+        function getDayHeaderFormat() {
+            if (window.innerWidth < 576) { // Breakpoint où tu veux passer aux abréviations
+                return { weekday: 'short' }; // 'short' (Lun) ou 'narrow' (L)
+            } else {
+                return { weekday: 'long' };  // 'Lundi'
+            }
+        }
+
         const calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
             locale: 'fr',
+            firstDay: 1,
+            // dayHeaderFormat: { weekday: 'long' }, // Ancienne ligne, remplacée par la suivante
+            dayHeaderFormat: getDayHeaderFormat(), // Utilisation de la fonction pour le format initial
             editable: true,
             selectable: true,
             height: 'auto',
             headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek' // Assure-toi que c'est cohérent avec calendar.html.twig si besoin (listWeek vs listMonth)
             },
             events: '{{ path("calendar_events") }}',
             eventContent: function(arg) {
-    return {
-        html: `
-            <div class="fc-event-custom">
-                ${arg.timeText ? `<div class="fc-event-time">${arg.timeText}</div>` : ''}
-                <div class="fc-event-title">${arg.event.title}</div>
-            </div>
-        `
-    };
-},
-
+                return {
+                    html: `
+                        <div class="fc-event-custom">
+                            ${arg.timeText ? `<div class="fc-event-time">${arg.timeText}</div>` : ''}
+                            <div class="fc-event-title">${arg.event.title}</div>
+                        </div>
+                    `
+                };
+            },
             dateClick: function(info) {
                 document.getElementById('eventId').value = '';
                 document.getElementById('eventTitle').value = '';
@@ -230,9 +278,7 @@
                 document.getElementById('eventAllDay').checked = false;
                 document.getElementById('eventStartTime').value = '09:00';
                 document.getElementById('eventEndTime').value = '10:00';
-
-                toggleTimeFields(); // mettre à jour l'affichage lors de l'ouverture
-
+                toggleTimeFields();
                 const modal = new bootstrap.Modal(document.getElementById('eventModal'));
                 modal.show();
             },
@@ -240,7 +286,6 @@
                 const event = info.event;
                 const start = new Date(event.start);
                 const end = new Date(event.end);
-
                 document.getElementById('eventId').value = event.id;
                 document.getElementById('eventTitle').value = event.title;
                 document.getElementById('eventDescription').value = event.extendedProps.description || '';
@@ -248,15 +293,19 @@
                 document.getElementById('eventAllDay').checked = event.allDay;
                 document.getElementById('eventStartTime').value = start.toTimeString().slice(0, 5);
                 document.getElementById('eventEndTime').value = end.toTimeString().slice(0, 5);
-
-                toggleTimeFields(); // mettre à jour selon l’état du champ
-
+                toggleTimeFields();
                 const modal = new bootstrap.Modal(document.getElementById('eventModal'));
                 modal.show();
+            },
+
+            // AJOUT IMPORTANT POUR LA RESPONSIVITÉ DYNAMIQUE des en-têtes de jours
+            windowResize: function(arg) {
+                calendar.setOption('dayHeaderFormat', getDayHeaderFormat());
             }
         });
         calendar.render();
 
+        // Gestion du formulaire modal (création/modification)
         document.getElementById('eventForm').addEventListener('submit', function (e) {
             e.preventDefault();
             const id = document.getElementById('eventId').value;
@@ -286,44 +335,77 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    bootstrap.Modal.getInstance(document.getElementById('eventModal')).hide();
+                    // S'assurer que le modal est bien instancié avant de le cacher
+                    const eventModalEl = document.getElementById('eventModal');
+                    const modalInstance = bootstrap.Modal.getInstance(eventModalEl);
+                    if (modalInstance) {
+                        modalInstance.hide();
+                    }
                     calendar.refetchEvents();
                 } else {
-                    alert("Erreur: " + data.error);
+                    alert("Erreur lors de l'enregistrement: " + (data.error || "Erreur inconnue."));
                 }
+            })
+            .catch(error => {
+                console.error("Erreur fetch (soumission formulaire):", error);
+                alert("Erreur de communication lors de l'enregistrement.");
             });
         });
 
+        // Gestion de la suppression
         document.getElementById('deleteEventBtn').addEventListener('click', function () {
             const id = document.getElementById('eventId').value;
-            if (!id) return;
+            if (!id) {
+                console.warn("Aucun ID d'événement à supprimer.");
+                return;
+            }
             if (confirm("Confirmer la suppression ?")) {
                 fetch('{{ path("calendar_delete_event") }}', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id })
                 })
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) {
+                        // Tenter de lire le message d'erreur JSON du serveur en cas d'échec HTTP
+                        return res.json().then(errData => { 
+                            throw new Error(errData.error || `Erreur HTTP ${res.status}`);
+                        });
+                    }
+                    return res.json();
+                })
                 .then(data => {
                     if (data.success) {
-                        bootstrap.Modal.getInstance(document.getElementById('eventModal')).hide();
+                        const eventModalEl = document.getElementById('eventModal');
+                        const modalInstance = bootstrap.Modal.getInstance(eventModalEl);
+                        if (modalInstance) {
+                            modalInstance.hide();
+                        }
                         calendar.refetchEvents();
                     } else {
-                        alert("Erreur: " + data.error);
+                        alert("Erreur lors de la suppression: " + (data.error || "Erreur inconnue."));
                     }
+                })
+                .catch(error => {
+                    console.error("Erreur fetch (suppression):", error);
+                    alert("Erreur de communication lors de la suppression: " + error.message);
                 });
             }
         });
 
-        // ✅ Affichage conditionnel des heures
+        // Affichage conditionnel des champs d'heure
         const allDayCheckbox = document.getElementById('eventAllDay');
         const timeFields = document.getElementById('eventTimeFields');
 
         function toggleTimeFields() {
-            timeFields.style.display = allDayCheckbox.checked ? 'none' : 'block';
+            if (allDayCheckbox && timeFields) { // Vérifier que les éléments existent
+                timeFields.style.display = allDayCheckbox.checked ? 'none' : 'block';
+            }
         }
 
-        allDayCheckbox.addEventListener('change', toggleTimeFields);
+        if (allDayCheckbox) { // Vérifier que l'élément existe avant d'ajouter l'écouteur
+            allDayCheckbox.addEventListener('change', toggleTimeFields);
+        }
         toggleTimeFields(); // init au chargement
     });
 </script>
