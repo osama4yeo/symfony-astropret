@@ -59,6 +59,22 @@
             overflow-wrap: break-word;
         }
 
+        /* Correction des événements pour qu'ils restent horizontaux */
+        .fc-event-time, .fc-event-title {
+            white-space: normal !important;
+            word-break: break-word !important;
+            text-align: left;
+        }
+
+        .fc-daygrid-event {
+            display: block !important;
+            width: 100% !important;
+            line-height: 1.1;
+            padding: 4px 6px;
+        }
+
+
+
         .fc-daygrid-event .fc-event-title,
         .fc-daygrid-event .fc-event-time {
             color: white !important;
@@ -77,12 +93,18 @@
             background-color: #0d6efd !important;
             border: none !important;
             border-radius: 6px !important;
-            font-size: 0.9rem;
+            font-size: 0.9rem; 
         }
 
         .fc-button-primary:not(:disabled):hover {
             background-color: #0b5ed7 !important;
         }
+
+        /* ➕ Espacement entre les boutons du groupe */
+    .fc .fc-button-group > .fc-button {
+        margin-right: 6px;
+    }
+
 
         /* Style des en-têtes de jours (Lundi, Mardi, ...) */
         .fc-col-header-cell-cushion { 
@@ -169,92 +191,95 @@
 {% endblock %}
 
 {% block javascripts_page_specific %}
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const calendarEl = document.getElementById('calendar');
-            // Fonction pour déterminer le format des en-têtes de jour
-            function getDayHeaderFormat() {
-                if (window.innerWidth < 576) { // Breakpoint où tu veux passer aux abréviations
-                    return { weekday: 'short' }; // 'short' (Lun) ou 'narrow' (L)
-                } else {
-                    return { weekday: 'long' };  // 'Lundi'
-                }
-            }
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const calendarEl = document.getElementById('calendar');
 
-            const calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                locale: 'fr',
-                firstDay: 1,
-                dayHeaderFormat: getDayHeaderFormat(),
-                dayHeaderFormat: { weekday: 'long' },
-                events: "{{ path('calendar_events') }}",
+        // ✅ Détection initiale du format de jour
+        const isMobile = window.innerWidth < 576;
 
-                // ✅ UNE SEULE FOIS - barre de navigation complète
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
-                },
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'fr',
+            firstDay: 1,
 
-                // ✅ Traduction des boutons
-                buttonText: {
-                    today:    'Aujourd\'hui',
-                    month:    'Mois',
-                    week:     'Semaine',
-                    day:      'Jour',
-                    list:     'Liste'
-                },
+            dayHeaderFormat: isMobile ? { weekday: 'short' } : { weekday: 'long' },
 
-                // ✅ Définition des vues (facultatif mais propre)
-                views: {
-                    dayGridMonth: { buttonText: 'Mois' },
-                    timeGridWeek: { buttonText: 'Semaine' },
-                    timeGridDay: { buttonText: 'Jour' },
-                    listMonth:    { buttonText: 'Liste' }
-                },
+            events: "{{ path('calendar_events') }}",
 
-                // ✅ Affichage personnalisé du contenu d’un événement
-                eventContent: function(arg) {
-                    return {
-                        html: '<div class="fc-event-title" style="white-space: normal;">' + arg.event.title + '</div>'
-                    };
-                },
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+            },
 
-                // ✅ Tooltip au survol
-                eventDidMount: function(info) {
-                    const tooltip = document.createElement('div');
-                    tooltip.classList.add('fc-event-tooltip');
-                    tooltip.style.position = 'absolute';
-                    tooltip.style.zIndex = '1000';
-                    tooltip.style.background = 'rgba(0, 0, 0, 0.75)';
-                    tooltip.style.color = '#fff';
-                    tooltip.style.padding = '5px 10px';
-                    tooltip.style.borderRadius = '6px';
-                    tooltip.style.fontSize = '0.8rem';
+            buttonText: {
+                today:    'Aujourd\'hui',
+                month:    'Mois',
+                week:     'Semaine',
+                day:      'Jour',
+                list:     'Liste'
+            },
+
+            views: {
+                dayGridMonth: { buttonText: 'Mois' },
+                timeGridWeek: { buttonText: 'Semaine' },
+                timeGridDay: { buttonText: 'Jour' },
+                listMonth:    { buttonText: 'Liste' }
+            },
+
+            eventContent: function(arg) {
+                const timeText = arg.timeText;
+                const title = arg.event.title;
+
+                return {
+                    html: `
+                        <div class="fc-event-time" style="font-weight: bold;">${timeText}</div>
+                        <div class="fc-event-title">${title}</div>
+                    `
+                };
+            },
+
+            eventDidMount: function(info) {
+                const tooltip = document.createElement('div');
+                tooltip.classList.add('fc-event-tooltip');
+                tooltip.style.position = 'absolute';
+                tooltip.style.zIndex = '1000';
+                tooltip.style.background = 'rgba(0, 0, 0, 0.75)';
+                tooltip.style.color = '#fff';
+                tooltip.style.padding = '5px 10px';
+                tooltip.style.borderRadius = '6px';
+                tooltip.style.fontSize = '0.8rem';
+                tooltip.style.display = 'none';
+
+                tooltip.innerText = info.event.title + (info.event.extendedProps.description ? '\n' + info.event.extendedProps.description : '');
+                document.body.appendChild(tooltip);
+
+                info.el.addEventListener('mouseenter', function(e) {
+                    tooltip.style.display = 'block';
+                    tooltip.style.left = e.pageX + 'px';
+                    tooltip.style.top = e.pageY + 'px';
+                });
+
+                info.el.addEventListener('mousemove', function(e) {
+                    tooltip.style.left = e.pageX + 10 + 'px';
+                    tooltip.style.top = e.pageY + 10 + 'px';
+                });
+
+                info.el.addEventListener('mouseleave', function () {
                     tooltip.style.display = 'none';
-
-                    tooltip.innerText = info.event.title + (info.event.extendedProps.description ? '\n' + info.event.extendedProps.description : '');
-                    document.body.appendChild(tooltip);
-
-                    info.el.addEventListener('mouseenter', function(e) {
-                        tooltip.style.display = 'block';
-                        tooltip.style.left = e.pageX + 'px';
-                        tooltip.style.top = e.pageY + 'px';
-                    });
-
-                    info.el.addEventListener('mousemove', function(e) {
-                        tooltip.style.left = e.pageX + 10 + 'px';
-                        tooltip.style.top = e.pageY + 10 + 'px';
-                    });
-
-                    info.el.addEventListener('mouseleave', function () {
-                        tooltip.style.display = 'none';
-                    });
-                }
-            });
-
-            calendar.render();
+                });
+            }
         });
-    </script>
+
+        calendar.render();
+
+        // 🔁 Si on redimensionne l’écran
+        window.addEventListener('resize', function () {
+            const isMobileNow = window.innerWidth < 576;
+            calendar.setOption('dayHeaderFormat', isMobileNow ? { weekday: 'short' } : { weekday: 'long' });
+        });
+    });
+</script>
 {% endblock %}

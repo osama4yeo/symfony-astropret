@@ -1,0 +1,130 @@
+/* public/css/custom_calendar.css */
+
+/* --- Variables de couleurs pour une modification facile --- */
+:root {
+    --fc-primary-color: #5E60CE; /* Un violet doux comme couleur principale */
+    --fc-secondary-color: #484848; /* Texte principal */
+    --fc-background-color: #FFFFFF; /* Fond du calendrier */
+    --fc-today-bg-color: #F0F0FF; /* Fond pour la date d'aujourd'hui */
+    --fc-border-color: #EAEAEA; /* Couleur des bordures */
+    --fc-hover-color: #F5F5F5; /* Couleur au survol d'un jour */
+
+    /* Couleurs pour les sources d'événements (celles de ton contrôleur) */
+    --event-color-ics: #17A2B8; /* Cyan pour les imports ICS (un peu plus doux) */
+    --event-color-google-synced: #20C997; /* Vert d'eau pour les synchros Google */
+    --event-color-manual: #5E60CE; /* Violet pour les manuels (même que la couleur primaire) */
+    --event-color-google-only: #FFC107; /* Jaune pour les "Google-only" */
+}
+
+/* --- Style général du calendrier --- */
+#calendar {
+    max-width: 100%;
+    width: 100%;
+    min-height: 700px;
+    background-color: var(--fc-background-color);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+    border: 1px solid var(--fc-border-color);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* --- Barre d'outils (Mois, Précédent, Suivant) --- */
+.fc-header-toolbar {
+    margin-bottom: 2rem !important;
+}
+
+.fc-toolbar-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--fc-secondary-color);
+    text-transform: capitalize;
+}
+
+.fc-button, .fc-button:hover, .fc-button:active, .fc-button:focus {
+    background-color: transparent !important;
+    color: var(--fc-primary-color) !important;
+    border: 1px solid var(--fc-primary-color) !important;
+    border-radius: 8px !important;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+    box-shadow: none !important;
+}
+
+.fc-button:hover {
+    background-color: var(--fc-primary-color) !important;
+    color: white !important;
+}
+
+.fc-button-primary.fc-button-active {
+    background-color: var(--fc-primary-color) !important;
+    color: white !important;
+}
+
+/* --- Grille du calendrier (jours) --- */
+.fc-daygrid-day {
+    border: 1px solid var(--fc-border-color);
+    transition: background-color 0.2s;
+}
+
+.fc-daygrid-day:hover {
+    background-color: var(--fc-hover-color);
+}
+
+.fc-day-today {
+    background-color: var(--fc-today-bg-color) !important; /* Important pour surcharger le style de base */
+    font-weight: bold;
+}
+.fc-col-header-cell {
+    background-color: #f8f9fa;
+    color: var(--fc-secondary-color);
+    font-weight: 500;
+}
+
+/* --- Style des événements --- */
+.fc-event {
+    border: none !important;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.fc-event:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Application des couleurs dynamiques (via le contrôleur) */
+.fc-event[style*="background-color: #0dcaf0"] {
+    background-color: var(--event-color-ics) !important;
+    color: white !important;
+}
+.fc-event[style*="background-color: #28a745"] {
+    background-color: var(--event-color-google-synced) !important;
+    color: white !important;
+}
+.fc-event[style*="background-color: #007bff"] {
+    background-color: var(--event-color-manual) !important;
+    color: white !important;
+}
+.fc-event[style*="background-color: #ffc107"] {
+    background-color: var(--event-color-google-only) !important;
+    color: #333 !important; /* Texte plus foncé pour le fond jaune */
+}
+
+/* Assurer que le titre à l'intérieur de l'événement a la bonne couleur */
+.fc-event .fc-event-title {
+    color: inherit !important;
+}
+
+/* --- Style pour SweetAlert2 (déjà bon, on peut le garder) --- */
+.swal2-input, .swal2-textarea { /* ... votre code existant ... */ }
+.swal2-label { /* ... votre code existant ... */ }
