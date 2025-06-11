@@ -84,7 +84,10 @@
 
     <footer class="footer mt-auto py-3 bg-light">
         <div class="container text-center">
-            <span class="text-muted">© {{ "now"|date("Y") }} Astropret. Tous droits réservés.</span>
+            <span class="text-muted">
+                © {{ "now"|date("Y") }} Astropret. Tous droits réservés.
+                | <a href="{{ path('app_faq') }}">FAQ</a>
+            </span>
         </div>
     </footer>
 

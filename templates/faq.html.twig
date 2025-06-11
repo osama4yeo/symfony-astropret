@@ -1,0 +1,134 @@
+{# templates/static/faq.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}FAQ - AstroPrêt{% endblock %}
+
+{% block body_content %}
+<div class="container my-5">
+    <h1 class="text-center mb-4">Foire Aux Questions (FAQ)</h1>
+
+    {# Section : À propos de l’application #}
+    <h2 class="h3 mt-5 mb-3">🌌 À propos de l’application</h2>
+    <div class="accordion" id="faqAbout">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingAbout1">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAbout1" aria-expanded="false" aria-controls="collapseAbout1">
+                    Q : Qu’est-ce qu’AstroPrêt ?
+                </button>
+            </h2>
+            <div id="collapseAbout1" class="accordion-collapse collapse" aria-labelledby="headingAbout1" data-bs-parent="#faqAbout">
+                <div class="accordion-body">
+                    R : AstroPrêt est la plateforme en ligne de notre association pour la gestion et la location de notre parc de matériel astronomique. Elle permet aux membres de consulter le matériel disponible, de le réserver, et aux administrateurs de gérer les prêts et événements.
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingAbout2">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAbout2" aria-expanded="false" aria-controls="collapseAbout2">
+                    Q : Qui peut utiliser AstroPrêt pour louer du matériel ?
+                </button>
+            </h2>
+            <div id="collapseAbout2" class="accordion-collapse collapse" aria-labelledby="headingAbout2" data-bs-parent="#faqAbout">
+                <div class="accordion-body">
+                    R : Seuls les membres actifs, à jour de leur cotisation à l’association, peuvent utiliser AstroPrêt pour réserver ou emprunter du matériel.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Section : Connexion & inscription #}
+    <h2 class="h3 mt-5 mb-3">🔐 Connexion & inscription</h2>
+    <div class="accordion" id="faqAuth">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingAuth1">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAuth1">
+                    Q : Comment puis-je m’inscrire sur AstroPrêt ?
+                </button>
+            </h2>
+            <div id="collapseAuth1" class="accordion-collapse collapse" data-bs-parent="#faqAuth">
+                <div class="accordion-body">
+                    R : Cliquez sur le lien “Inscription” dans la barre de navigation ou allez à l’adresse <code>/register</code>. Fournissez une adresse e-mail valide, un mot de passe, et vos informations personnelles (nom, prénom). Vous devez accepter les conditions d'utilisation.
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingAuth2">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAuth2">
+                    Q : Je n’arrive pas à me connecter, que faire ?
+                </button>
+            </h2>
+            <div id="collapseAuth2" class="accordion-collapse collapse" data-bs-parent="#faqAuth">
+                <div class="accordion-body">
+                    R : Vérifiez que votre e-mail et mot de passe sont corrects. Sinon, contactez l’administrateur.
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingAuth3">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAuth3">
+                    Q : J’ai oublié mon mot de passe.
+                </button>
+            </h2>
+            <div id="collapseAuth3" class="accordion-collapse collapse" data-bs-parent="#faqAuth">
+                <div class="accordion-body">
+                    R : La fonction de réinitialisation automatique n’est pas encore disponible. Contactez l’administrateur pour réinitialiser votre mot de passe.
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {# Vous pouvez continuer sur ce modèle pour toutes les autres sections... #}
+    {# Section : Profil utilisateur #}
+    <h2 class="h3 mt-5 mb-3">👤 Profil utilisateur</h2>
+    <div class="accordion" id="faqProfile">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingProfile1">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseProfile1">
+                    Q : Comment modifier mes informations personnelles ?
+                </button>
+            </h2>
+            <div id="collapseProfile1" class="accordion-collapse collapse" data-bs-parent="#faqProfile">
+                <div class="accordion-body">
+                    R : Rendez-vous dans votre page <code>/profil</code>, modifiez les champs souhaités (nom, prénom, téléphone, etc.) et cliquez sur “Enregistrer”.
+                </div>
+            </div>
+        </div>
+         <div class="accordion-item">
+            <h2 class="accordion-header" id="headingProfile2">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseProfile2">
+                    Q : Puis-je changer ma photo de profil (avatar) ?
+                </button>
+            </h2>
+            <div id="collapseProfile2" class="accordion-collapse collapse" data-bs-parent="#faqProfile">
+                <div class="accordion-body">
+                    R : Oui, dans votre profil, vous pouvez télécharger une image (format JPG/PNG, < 2 Mo) comme avatar.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Section : Prêt de matériel #}
+    <h2 class="h3 mt-5 mb-3">📦 Prêt de matériel</h2>
+    <div class="accordion" id="faqMateriel">
+        {# ... Ajoutez les questions/réponses de cette section ici en suivant le même modèle ... #}
+    </div>
+
+    {# Section : Aide #}
+    <h2 class="h3 mt-5 mb-3">🆘 Besoin d’aide ?</h2>
+    <div class="accordion" id="faqHelp">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingHelp1">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHelp1">
+                    Q : Qui contacter en cas de souci technique ou de question ?
+                </button>
+            </h2>
+            <div id="collapseHelp1" class="accordion-collapse collapse" data-bs-parent="#faqHelp">
+                <div class="accordion-body">
+                    R : Contactez le responsable de la plateforme à l’adresse suivante : <a href="mailto:astropret@gmail.com">astropret@gmail.com</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
