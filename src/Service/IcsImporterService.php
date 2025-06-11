@@ -5,14 +5,13 @@ namespace App\Service;
 use App\Entity\Event;
 use Doctrine\ORM\EntityManagerInterface;
 use ICal\ICal;
-use Psr\Log\LoggerInterface; // Ajout du Logger pour tracer les erreurs
+use Psr\Log\LoggerInterface;
 
 class IcsImporterService
 {
     private EntityManagerInterface $em;
     private LoggerInterface $logger;
 
-    // On injecte aussi le Logger pour pouvoir enregistrer les erreurs proprement
     public function __construct(EntityManagerInterface $em, LoggerInterface $logger)
     {
         $this->em = $em;
@@ -21,43 +20,53 @@ class IcsImporterService
 
     public function importFromUrl(string $url): array
     {
+        // ==================== NOUVELLE AMÉLIORATION ICI ====================
+        // On normalise l'URL en remplaçant le pseudo-protocole 'webcal' par 'http'.
+        // Cela rend le service compatible avec les liens de type webcal://.
+        $url = str_replace('webcal://', 'http://', $url);
+        // =====================================================================
+
+        $defaultTimezoneString = 'Europe/Paris';
+
         try {
-            $ics = new ICal($url, [
-                'defaultTimeZone' => 'Europe/Paris',
-                'skipRecurrence'  => false, // Important pour avoir les événements récurrents
-            ]);
+            $opts = [
+                'http_opts' => [
+                    'ssl' => ['verify_peer' => false, 'verify_peer_name' => false],
+                ],
+            ];
+            $ics = new ICal($url, array_merge([
+                'defaultTimeZone' => $defaultTimezoneString,
+                'skipRecurrence'  => false,
+            ], $opts));
         } catch (\Exception $e) {
-            // AMÉLIORATION 3 : Gestion des erreurs
-            // Si l'URL est invalide ou le fichier corrompu, on attrape l'erreur ici.
-            $this->logger->error('Erreur lors de l\'import ICS depuis l\'URL: ' . $url, ['exception' => $e]);
-            return ['error' => 'Impossible de lire le calendrier depuis l\'URL fournie.'];
+            $this->logger->error('Erreur lors de l\'initialisation ou de la lecture de l\'URL ICS: ' . $url, ['exception' => $e]);
+            return ['error' => 'Impossible de lire le calendrier depuis l\'URL fournie. Détail : ' . $e->getMessage()];
         }
 
         if (!$ics->hasEvents()) {
-            return ['added' => 0, 'skipped' => 0]; // Pas d'événements à traiter
+            return ['added' => 0, 'skipped' => 0, 'message' => 'Aucun événement trouvé dans le calendrier.'];
         }
         
         $events = $ics->events();
         
-        // --- AMÉLIORATION 2 : Optimisation des requêtes ---
-        // 1. On récupère tous les UID du fichier ICS en une seule fois.
         $allUidsFromIcs = array_map(fn($e) => $e->uid, $events);
+        if (empty($allUidsFromIcs)) {
+             return ['added' => 0, 'skipped' => 0, 'message' => 'Aucun événement avec un UID trouvé.'];
+        }
 
-        // 2. On fait UNE SEULE requête pour trouver tous les événements existants.
         $existingEvents = $this->em->getRepository(Event::class)->findBy(['uid' => $allUidsFromIcs]);
-        
-        // 3. On crée un tableau de recherche simple pour une vérification rapide.
         $existingUids = [];
         foreach ($existingEvents as $existingEvent) {
             $existingUids[$existingEvent->getUid()] = true;
         }
-        // --- Fin de l'optimisation ---
         
         $added = 0;
         $skipped = 0;
 
+        $validTimezones = \DateTimeZone::listIdentifiers();
+        $defaultTimezone = new \DateTimeZone($defaultTimezoneString);
+
         foreach ($events as $icsEvent) {
-            // On vérifie maintenant dans notre tableau local, c'est beaucoup plus rapide.
             if (isset($existingUids[$icsEvent->uid])) {
                 $skipped++;
                 continue;
@@ -65,30 +74,36 @@ class IcsImporterService
 
             $event = new Event();
             $event->setUid($icsEvent->uid);
-            $event->setSource('ics'); // Parfait, tu l'avais déjà
+            $event->setSource('ics');
             $event->setTitle($icsEvent->summary ?? 'Sans titre');
-            $event->setDescription($icsEvent->description ?? '');
-            
-            // AMÉLIORATION 1 : Détection des événements "toute la journée"
-            $isAllDay = !isset($icsEvent->dtstart_tz);
-            $event->setAllDay($isAllDay);
+            $event->setDescription($icsEvent->description ?? ''); // Utilise une chaîne vide au lieu de null
 
-            // Le `dtstart` de la librairie est un string, on le convertit en objet DateTime
-            $event->setStart(new \DateTime($icsEvent->dtstart, new \DateTimeZone($icsEvent->dtstart_tz ?? 'Europe/Paris')));
-            
-            // Pour la date de fin, on gère le cas où elle n'existe pas
-            if (isset($icsEvent->dtend)) {
-                $event->setEnd(new \DateTime($icsEvent->dtend, new \DateTimeZone($icsEvent->dtend_tz ?? 'Europe/Paris')));
-            } else {
-                // Si pas de date de fin, on peut mettre la même que le début (ou ajouter une durée par défaut)
-                $event->setEnd($event->getStart());
+            $startTimezoneToUse = $defaultTimezone;
+            if (isset($icsEvent->dtstart_tz) && in_array($icsEvent->dtstart_tz, $validTimezones)) {
+                $startTimezoneToUse = new \DateTimeZone($icsEvent->dtstart_tz);
             }
+            $event->setStart(new \DateTime($icsEvent->dtstart, $startTimezoneToUse));
+
+            if (isset($icsEvent->dtend)) {
+                $endTimezoneToUse = $defaultTimezone;
+                if (isset($icsEvent->dtend_tz) && in_array($icsEvent->dtend_tz, $validTimezones)) {
+                    $endTimezoneToUse = new \DateTimeZone($icsEvent->dtend_tz);
+                }
+                $event->setEnd(new \DateTime($icsEvent->dtend, $endTimezoneToUse));
+            } else {
+                $event->setEnd(clone $event->getStart());
+            }
+
+            $isAllDay = strpos($icsEvent->dtstart, 'T') === false;
+            $event->setAllDay($isAllDay);
 
             $this->em->persist($event);
             $added++;
         }
 
-        $this->em->flush();
+        if ($added > 0) {
+            $this->em->flush();
+        }
 
         return [
             'added' => $added,

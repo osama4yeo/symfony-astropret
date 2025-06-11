@@ -143,17 +143,6 @@
         });
         calendar.render();
 
-        // ===================================================================
-        // AJOUT POUR LE RAFRAÎCHISSEMENT AUTOMATIQUE (POLLING)
-        // ===================================================================
-        const REFRESH_INTERVAL = 1000; // Intervalle en millisecondes
-
-        // On démarre un timer qui va appeler refetchEvents() régulièrement
-        const refreshTimer = setInterval(function() {
-            console.log('Rafraîchissement des événements...'); // Optionnel: pour voir dans la console
-            calendar.refetchEvents(); // Demande à FullCalendar de recharger les événements
-        }, REFRESH_INTERVAL);
-
         document.getElementById('addEventBtn').addEventListener('click', function() {
             openEventModal({});
         });
