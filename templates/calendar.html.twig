@@ -1,94 +1,114 @@
+{# --- FICHIER TWIG PRINCIPAL --- #}
+{# Ce fichier hérite d'une structure de base 'base.html.twig'. C'est une bonne pratique dans Symfony. #}
 {% extends 'base.html.twig' %}
 
+{# Définit le titre de la page qui apparaîtra dans l'onglet du navigateur. #}
 {% block title %}Calendrier des événements{% endblock %}
 
+{# --- CONTENU PRINCIPAL DE LA PAGE --- #}
 {% block body_content %}
+    {# 'container' et 'mt-4' sont des classes Bootstrap pour centrer le contenu et ajouter une marge au-dessus. #}
     <div class="container mt-4">
         <h2>Calendrier des événements</h2>
 
-{# 🔐 Affichage conditionnel pour les admins #}
-{% if is_granted('ROLE_ADMIN') %}
-    <div class="text-end mb-3">
-        <a href="{{ path('calendar_manage') }}" class="btn btn-primary">
-            Gestion des événements
-        </a>
-    </div>
-{% endif %}
+        {# --- SECTION RÉSERVÉE AUX ADMINISTRATEURS --- #}
+        {# 🔐 C'est une vérification de sécurité. Le contenu de ce 'if' ne s'affichera que si l'utilisateur connecté a le rôle 'ROLE_ADMIN'. #}
+        {# 'is_granted' est une fonction de sécurité de Symfony, c'est la bonne manière de faire. #}
+        {% if is_granted('ROLE_ADMIN') %}
+            {# 'text-end' et 'mb-3' sont des classes Bootstrap pour aligner à droite et ajouter une marge en dessous. #}
+            <div class="text-end mb-3">
+                {# Le lien pointe vers une route Symfony nommée 'calendar_manage'. Utiliser path() est une bonne pratique car si vous changez l'URL dans vos routes, le lien se mettra à jour automatiquement. #}
+                <a href="{{ path('calendar_manage') }}" class="btn btn-primary">
+                    Gestion des événements
+                </a>
+            </div>
+        {% endif %}
 
-
+        {# --- CONTENEUR DU CALENDRIER --- #}
+        {# C'est dans cette balise 'div' que la bibliothèque JavaScript FullCalendar va générer et afficher le calendrier. L'ID 'calendar' est essentiel pour que le script JS puisse la trouver. #}
         <div id="calendar"></div>
     </div>
 {% endblock %}
 
+{# --- FEUILLES DE STYLE (CSS) SPÉCIFIQUES À CETTE PAGE --- #}
 {% block stylesheets %}
+    {# 'parent()' inclut les feuilles de style du fichier de base 'base.html.twig'. Très important pour ne pas perdre le style global du site. #}
     {{ parent() }}
+    
+    {# Lien vers le fichier CSS de FullCalendar via un CDN (Content Delivery Network). C'est rapide et efficace. #}
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet">
+    
+    {# Styles CSS personnalisés pour cette page. #}
     <style>
+        /* --- STYLES GÉNÉRAUX --- */
         body {
-            background-color: #f8f9fa;
+            background-color: #f8f9fa; /* Couleur de fond de la page. */
         }
 
         h2 {
-            font-weight: 600;
-            color: #343a40;
-            text-align: center;
-            margin-bottom: 30px;
+            font-weight: 600; /* Titre en gras. */
+            color: #343a40; /* Couleur de texte sombre. */
+            text-align: center; /* Titre centré. */
+            margin-bottom: 30px; /* Espace sous le titre. */
         }
         
+        /* --- STYLE DU CONTENEUR DU CALENDRIER --- */
         #calendar {
             max-width: 100%;
             width: 100%;
-            min-height: 700px;
-            background-color: #ffffff;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            overflow-x: auto;
+            min-height: 700px; /* Hauteur minimale pour éviter qu'il soit trop petit. */
+            background-color: #ffffff; /* Fond blanc pour le calendrier. */
+            border-radius: 12px; /* Bords arrondis. */
+            padding: 20px; /* Espace intérieur. */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Ombre légère pour un effet de profondeur. */
+            overflow-x: auto; /* Ajoute une barre de défilement horizontale si nécessaire sur petits écrans. */
         }
 
-        /* Styles des événements */
+        /* --- STYLES DES ÉVÉNEMENTS DANS LE CALENDRIER --- */
+        /* Cible les boîtes d'événements dans la vue mensuelle. */
         .fc-daygrid-event {
-            background-color: #0b5ed7 !important;
-            color: white !important;
-            border: none !important;
-            border-radius: 6px;
+            background-color: #0b5ed7 !important; /* Couleur de fond bleue. '!important' force ce style à s'appliquer. */
+            color: white !important; /* Texte en blanc. */
+            border: none !important; /* Aucune bordure. */
+            border-radius: 6px; /* Bords arrondis. */
             padding: 2px 6px;
-            font-size: 0.8rem;
+            font-size: 0.8rem; /* Taille de police légèrement réduite. */
             font-weight: 500;
-            white-space: normal !important;
-            overflow-wrap: break-word;
+            white-space: normal !important; /* Permet au texte d'aller à la ligne. */
+            overflow-wrap: break-word; /* Coupe les mots longs pour éviter qu'ils ne débordent. */
         }
 
-        /* Correction des événements pour qu'ils restent horizontaux */
+        /* Assure que le texte à l'intérieur de l'événement (heure et titre) peut aller à la ligne. */
         .fc-event-time, .fc-event-title {
             white-space: normal !important;
             word-break: break-word !important;
-            text-align: left;
+            text-align: left; /* Aligne le texte à gauche dans l'événement. */
         }
 
+        /* Assure que l'événement prend toute la largeur de sa case. */
         .fc-daygrid-event {
             display: block !important;
             width: 100% !important;
-            line-height: 1.1;
+            line-height: 1.1; /* Hauteur de ligne pour un espacement correct. */
             padding: 4px 6px;
         }
 
-
-
+        /* Assure que le texte reste blanc même s'il est dans un lien. */
         .fc-daygrid-event .fc-event-title,
         .fc-daygrid-event .fc-event-time {
             color: white !important;
         }
 
+        /* --- STYLES DE LA BARRE D'OUTILS DE FULLCALENDAR --- */
         /* Style du titre du calendrier (ex: Juin 2024) */
         .fc-toolbar-title {
             font-size: 1.4rem;
             font-weight: 500;
             color: #343a40;
-            text-transform: capitalize; /* MODIFIÉ de uppercase à capitalize */
+            text-transform: capitalize; /* Met la première lettre de chaque mot en majuscule (ex: "Juin 2024"). */
         }
 
-        /* Styles des boutons FullCalendar */
+        /* Styles des boutons (Précédent, Suivant, Mois, etc.) */
         .fc-button {
             background-color: #0d6efd !important;
             border: none !important;
@@ -96,124 +116,120 @@
             font-size: 0.9rem; 
         }
 
+        /* Style des boutons au survol de la souris. */
         .fc-button-primary:not(:disabled):hover {
             background-color: #0b5ed7 !important;
         }
 
-        /* ➕ Espacement entre les boutons du groupe */
-    .fc .fc-button-group > .fc-button {
-        margin-right: 6px;
-    }
+        /* Ajoute un petit espace entre les boutons dans un groupe (ex: entre 'prev' et 'next'). */
+        .fc .fc-button-group > .fc-button {
+            margin-right: 6px;
+        }
 
-
+        /* --- STYLES DES CELLULES DU CALENDRIER --- */
         /* Style des en-têtes de jours (Lundi, Mardi, ...) */
         .fc-col-header-cell-cushion { 
+            color: black !important; /* Texte en noir. */
+            text-decoration: none !important; /* Enlève le soulignement s'il y en a un. */
+        }
+
+        /* Styles pour les numéros de jour pour qu'ils soient noirs et non soulignés. */
+        .fc-daygrid-day-number, /* Vue mois */
+        .fc-timegrid-axis-cushion, /* Axe des heures (vue semaine/jour) */
+        .fc-timegrid-slot-label, /* Étiquettes des heures (vue semaine/jour) */
+        .fc-daygrid-day-frame a { /* Liens à l'intérieur des jours */
             color: black !important;
             text-decoration: none !important;
         }
 
-        /* Styles pour les numéros de jour en noir et sans soulignement (GLOBAL) - AJOUTÉ */
-        .fc-daygrid-day-number {
-            color: black !important;
-            text-decoration: none !important;
-        }
-        /* Pour les vues semaine/jour si besoin - AJOUTÉ */
-        .fc-timegrid-axis-cushion,
-        .fc-timegrid-slot-label {
-            color: black !important;
-            text-decoration: none !important;
-        }
-        /* S'assurer que les liens à l'intérieur des jours sont aussi stylés - AJOUTÉ */
-        .fc-daygrid-day-frame a { 
-            color: black !important;
-            text-decoration: none !important;
-        }
-
-
-        .alert-warning {
-            max-width: 600px;
-            margin: auto;
-            padding: 10px 20px;
-            font-size: 0.95rem;
-        }
-
-        /* --- SECTION RESPONSIVE --- */
+        /* --- SECTION RESPONSIVE (pour les écrans plus petits comme les mobiles) --- */
         @media (max-width: 768px) {
             #calendar {
-                padding: 10px;
+                padding: 10px; /* Moins d'espace intérieur sur mobile. */
             }
 
+            /* La barre d'outils passe en mode colonne pour mieux s'adapter. */
             .fc-toolbar.fc-header-toolbar {
                 flex-direction: column;
                 align-items: center;
             }
 
             .fc-toolbar-chunk {
-                margin-bottom: 8px;
+                margin-bottom: 8px; /* Espace entre les groupes de boutons. */
                 text-align: center;
             }
 
             .fc-toolbar-title {
-                font-size: 1.2rem; 
-                /* text-transform: capitalize; est hérité de la règle générale.
-                   Si tu voulais ex: TOUT_MAJUSCULE sur mobile, tu ajouterais text-transform: uppercase; ici.
-                   Le text-transform: uppercase; qui était ici a été retiré car il était redondant ou conflictuel avec le capitalize général.
-                */
+                font-size: 1.2rem; /* Titre plus petit sur mobile. */
             }
 
             .fc-button {
-                font-size: 0.8rem;
+                font-size: 0.8rem; /* Boutons plus petits. */
                 padding: 4px 8px;
             }
 
             .fc-daygrid-event {
-                font-size: 0.75rem;
+                font-size: 0.75rem; /* Texte des événements encore plus petit. */
                 padding: 2px 4px;
             }
 
-            .fc-col-header-cell-cushion { /* Cible le contenu de l'en-tête des jours */
-                font-size: 0.7em !important; /* Réduit la taille de la police. Ajuste la valeur. */
-                padding: 2px 1px !important; /* Réduit le padding interne. Ajuste. */
+            /* Réduit la taille des en-têtes de jours (Lundi, Mardi...) pour gagner de la place. */
+            .fc-col-header-cell-cushion {
+                font-size: 0.7em !important;
+                padding: 2px 1px !important;
                 line-height: 1.2; 
             }
-
-            /* Optionnel: Si les jours sont encore trop serrés AVANT que le JS ne change le format */
+            
+            /* Réduit l'espacement des cellules d'en-tête si elles sont encore trop serrées. */
             .fc-theme-standard .fc-scrollgrid th,
             .fc-theme-standard .fc-col-header-cell {
                 padding-left: 1px !important;
                 padding-right: 1px !important;
             }
-
-            /* Les styles pour .fc-daygrid-day-number sont maintenant globaux et s'appliquent aussi ici. */
-            /* Si tu avais besoin d'un style *différent* pour les numéros sur mobile, tu le mettrais ici. */
         }
     </style>
 {% endblock %}
 
+{# --- SCRIPTS JAVASCRIPT SPÉCIFIQUES À CETTE PAGE --- #}
 {% block javascripts_page_specific %}
+{# Lien vers la bibliothèque JavaScript de FullCalendar via CDN. #}
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 <script>
+    // Attend que le contenu HTML de la page (le DOM) soit entièrement chargé avant d'exécuter le script.
+    // C'est une pratique essentielle pour éviter les erreurs.
     document.addEventListener('DOMContentLoaded', function () {
+        // Sélectionne la 'div' avec l'id 'calendar' pour y injecter le calendrier.
         const calendarEl = document.getElementById('calendar');
 
-        // ✅ Détection initiale du format de jour
+        // --- GESTION RESPONSIVE EN JAVASCRIPT ---
+        // ✅ Détecte si la largeur de la fenêtre est inférieure à 576px (considéré comme mobile).
+        // Cette vérification est faite au chargement initial de la page.
         const isMobile = window.innerWidth < 576;
 
+        // Crée une nouvelle instance de FullCalendar.
         const calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            locale: 'fr',
-            firstDay: 1,
+            // --- OPTIONS DE CONFIGURATION DE FULLCALENDAR ---
 
+            initialView: 'dayGridMonth', // La vue par défaut est la vue "mois".
+            locale: 'fr', // Affiche le calendrier en français (noms des mois, jours...).
+            firstDay: 1, // La semaine commence le Lundi (1) au lieu de Dimanche (0).
+
+            // Affiche les jours en format court ("Lun.") sur mobile, et long ("Lundi") sur ordinateur.
             dayHeaderFormat: isMobile ? { weekday: 'short' } : { weekday: 'long' },
 
+            // Indique à FullCalendar où aller chercher les données des événements.
+            // Il fera une requête AJAX à l'URL générée par la route Symfony 'calendar_events'.
+            // C'est la méthode la plus propre et la plus efficace pour charger des données dynamiques.
             events: "{{ path('calendar_events') }}",
 
+            // Configure la barre d'outils en haut du calendrier.
             headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+                left: 'prev,next today', // À gauche : boutons précédent, suivant, aujourd'hui.
+                center: 'title', // Au centre : le titre (ex: "Juin 2024").
+                right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth' // À droite : les sélecteurs de vue.
             },
 
+            // Traduit le texte des boutons.
             buttonText: {
                 today:    'Aujourd\'hui',
                 month:    'Mois',
@@ -221,7 +237,8 @@
                 day:      'Jour',
                 list:     'Liste'
             },
-
+            
+            // Personnalise le texte des boutons pour chaque vue (assure la cohérence).
             views: {
                 dayGridMonth: { buttonText: 'Mois' },
                 timeGridWeek: { buttonText: 'Semaine' },
@@ -229,10 +246,13 @@
                 listMonth:    { buttonText: 'Liste' }
             },
 
+            // --- PERSONNALISATION DE L'AFFICHAGE DES ÉVÉNEMENTS ---
+            // Cette fonction permet de contrôler le HTML à l'intérieur de chaque événement.
             eventContent: function(arg) {
-                const timeText = arg.timeText;
-                const title = arg.event.title;
+                const timeText = arg.timeText; // L'heure de l'événement (ex: "14:00").
+                const title = arg.event.title; // Le titre de l'événement.
 
+                // Retourne un objet avec du code HTML personnalisé.
                 return {
                     html: `
                         <div class="fc-event-time" style="font-weight: bold;">${timeText}</div>
@@ -241,43 +261,60 @@
                 };
             },
 
+            // --- GESTION DES INFO-BULLES (TOOLTIPS) AU SURVOL ---
+            // Cette fonction est appelée après qu'un événement a été ajouté au calendrier.
             eventDidMount: function(info) {
+                // Crée dynamiquement une 'div' qui servira d'info-bulle.
                 const tooltip = document.createElement('div');
+                // Applique des styles pour la rendre invisible et la positionner correctement.
                 tooltip.classList.add('fc-event-tooltip');
                 tooltip.style.position = 'absolute';
-                tooltip.style.zIndex = '1000';
+                tooltip.style.zIndex = '1000'; // S'affiche au-dessus de tout le reste.
                 tooltip.style.background = 'rgba(0, 0, 0, 0.75)';
                 tooltip.style.color = '#fff';
                 tooltip.style.padding = '5px 10px';
                 tooltip.style.borderRadius = '6px';
                 tooltip.style.fontSize = '0.8rem';
-                tooltip.style.display = 'none';
+                tooltip.style.display = 'none'; // Cachée par défaut.
 
+                // Remplit l'info-bulle avec le titre et la description de l'événement (si elle existe).
+                // 'extendedProps' est l'endroit où vous pouvez mettre des données personnalisées depuis votre backend.
                 tooltip.innerText = info.event.title + (info.event.extendedProps.description ? '\n' + info.event.extendedProps.description : '');
+                
+                // Ajoute l'info-bulle au 'body' de la page.
                 document.body.appendChild(tooltip);
 
+                // Ajoute un écouteur d'événement : quand la souris entre sur l'événement...
                 info.el.addEventListener('mouseenter', function(e) {
-                    tooltip.style.display = 'block';
-                    tooltip.style.left = e.pageX + 'px';
+                    tooltip.style.display = 'block'; // ...on affiche l'info-bulle...
+                    tooltip.style.left = e.pageX + 'px'; // ...à la position du curseur.
                     tooltip.style.top = e.pageY + 'px';
                 });
 
+                // Quand la souris bouge sur l'événement...
                 info.el.addEventListener('mousemove', function(e) {
+                    // ...on met à jour la position de l'info-bulle pour qu'elle suive le curseur.
                     tooltip.style.left = e.pageX + 10 + 'px';
                     tooltip.style.top = e.pageY + 10 + 'px';
                 });
 
+                // Quand la souris quitte l'événement...
                 info.el.addEventListener('mouseleave', function () {
-                    tooltip.style.display = 'none';
+                    tooltip.style.display = 'none'; // ...on cache l'info-bulle.
                 });
             }
         });
 
+        // Affiche le calendrier sur la page. C'est l'appel final qui déclenche tout.
         calendar.render();
 
-        // 🔁 Si on redimensionne l’écran
+        // --- GESTION RESPONSIVE APRÈS LE CHARGEMENT ---
+        // 🔁 Ajoute un écouteur sur le redimensionnement de la fenêtre.
         window.addEventListener('resize', function () {
+            // Recalcule si on est en affichage mobile.
             const isMobileNow = window.innerWidth < 576;
+            // Met à jour dynamiquement l'option du calendrier pour le format des jours.
+            // Le calendrier se redessinera automatiquement avec le bon format.
             calendar.setOption('dayHeaderFormat', isMobileNow ? { weekday: 'short' } : { weekday: 'long' });
         });
     });

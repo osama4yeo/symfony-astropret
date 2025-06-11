@@ -1,43 +1,68 @@
+{# --- FICHIER TEMPLATE POUR LA PAGE DE PROFIL UTILISATEUR --- #}
 {# templates/profil.html.twig #}
+
+{# 🏛️ On hérite de la structure globale du site définie dans 'base.html.twig'. #}
 {% extends 'base.html.twig' %}
 
+{# ✏️ Définit le titre de la page pour l'onglet du navigateur. #}
 {% block title %}Mon profil{% endblock %}
 
+{# 📝 Début du contenu principal de la page. #}
 {% block body_content %}
-    <div class="container mt-4"> {# Ajout d'un container pour la cohérence #}
-        <h1 class="mb-4">Mon profil</h1> {# mb-4 pour l'espacement #}
+    {# 'container' centre le contenu, 'mt-4' ajoute une marge en haut. C'est pour une mise en page propre. #}
+    <div class="container mt-4">
+        <h1 class="mb-4">Mon profil</h1> {# 'mb-4' ajoute une marge en bas du titre. #}
 
-        {# --- AJOUT DE L'INCLUDE POUR LES MESSAGES FLASH --- #}
+        {# --- AFFICHAGE DES MESSAGES FLASH (notifications) --- #}
+        {# ✅ C'est une excellente pratique. Ce 'include' va chercher un autre fichier Twig qui gère l'affichage des messages
+           comme "Votre profil a été mis à jour avec succès.". 'ignore missing' évite une erreur si le fichier n'existe pas. #}
         {% include 'partials/_flash_messages.html.twig' ignore missing %}
         {# --- FIN DE L'AJOUT --- #}
 
+        {# --- BLOC PRINCIPAL: VÉRIFICATION DE L'UTILISATEUR CONNECTÉ --- #}
+        {# 🛡️ On vérifie que la variable 'user' existe. C'est une sécurité fondamentale.
+           Si la route est protégée dans le contrôleur (ex: avec #[IsGranted('ROLE_USER')]), cette condition est toujours vraie. #}
         {% if user %}
+            {# On utilise une carte Bootstrap pour présenter les informations de manière élégante. #}
+            {# 'mx-auto' centre la carte horizontalement, 'max-width' l'empêche d'être trop large sur de grands écrans. #}
             <div class="card mx-auto" style="max-width: 400px;">
-                <div class="card-body text-center">
+                <div class="card-body text-center"> {# 'text-center' centre tout le contenu de la carte. #}
 
+                    {# --- AFFICHAGE DE L'AVATAR --- #}
+                    {# On vérifie si un avatar personnalisé a été téléversé. #}
                     {% if user.avatar %}
-                        <img src="{{ asset('uploads/avatars/' ~ user.avatar) }}" class="avatar-img mb-3" alt="Mon avatar">
+                        {# Si oui, on l'affiche. 'asset()' génère le chemin public correct. #}
+                        {# La concaténation '~' assemble le chemin du dossier avec le nom du fichier de l'avatar. #}
+                        <img src="{{ asset('uploads/avatars/' ~ user.avatar) }}" class="avatar-img mb-3" alt="Mon avatar" loading="lazy">
                     {% else %}
-                        <img src="{{ asset('images/default-avatar-icon-of-social-media-user-vector.jpg') }}" class="avatar-img mb-3" alt="Avatar par défaut">
-                        {# Assurez-vous que cette image existe dans public/images/ #}
+                        {# Sinon, on affiche une image par défaut. #}
+                        <img src="{{ asset('images/default-avatar-icon-of-social-media-user-vector.jpg') }}" class="avatar-img mb-3" alt="Avatar par défaut" loading="lazy">
                     {% endif %}
 
-                    <h5 class="card-title">{{ user.prenom | default('') }} {{ user.nom | default('') }}</h5> {# Ajout de default('') pour éviter erreur si null #}
+                    {# --- AFFICHAGE DES INFORMATIONS TEXTUELLES --- #}
+                    {# 🛡️ SÉCURITÉ : Twig "échappe" automatiquement les variables. Si un utilisateur a un nom comme "<script>...", il sera affiché comme du texte et non exécuté. #}
+                    {# ✅ ROBUSTESSE : Le filtre '| default('')' empêche une erreur si user.prenom ou user.nom est null, en affichant une chaîne vide à la place. #}
+                    <h5 class="card-title">{{ user.prenom | default('') }} {{ user.nom | default('') }}</h5>
                     <p class="card-text">{{ user.email }}</p>
-                    {# Si vous avez d'autres infos à afficher, comme le téléphone, date de naissance, etc. #}
+                    
+                    {# Exemples commentés pour afficher d'autres informations de manière sécurisée et robuste. #}
                     {# <p class="card-text">Téléphone : {{ user.telephone | default('Non renseigné') }}</p> #}
                     {# <p class="card-text">Né(e) le : {{ user.dateNaissance ? user.dateNaissance|date('d/m/Y') : 'Non renseigné' }}</p> #}
+                    {# L'expression 'variable ? valeur_si_vrai : valeur_si_faux' est un opérateur ternaire, très pratique. #}
 
-
-                    <div class="d-flex justify-content-center gap-2 mt-4"> {# mt-4 pour plus d'espace #}
+                    {# --- BOUTONS D'ACTION --- #}
+                    {# 'd-flex justify-content-center' centre les boutons. 'gap-2' ajoute un petit espace entre eux. 'mt-4' les éloigne du texte au-dessus. #}
+                    <div class="d-flex justify-content-center gap-2 mt-4">
+                        {# Le lien pour modifier le profil. 'path()' est la méthode correcte pour générer des URL en Symfony. #}
                         <a href="{{ path('user_profile_edit') }}" class="btn btn-primary">Modifier mon profil</a>
-                        <a href="{{ path('app_logout') }}" class="btn btn-outline-danger">Se déconnecter</a> {# Changé en outline-danger pour moins d'emphase #}
+                        {# Le lien de déconnexion. 'btn-outline-danger' est un style plus discret pour une action secondaire. #}
+                        <a href="{{ path('app_logout') }}" class="btn btn-outline-danger">Se déconnecter</a>
                     </div>
                 </div>
             </div>
+        {# --- CAS OÙ L'UTILISATEUR N'EST PAS CONNECTÉ --- #}
+        {# Ce bloc est une sécurité supplémentaire. Il ne devrait pas s'afficher si la route est bien protégée côté serveur. #}
         {% else %}
-            {# Ce bloc else est rarement atteint si la route est protégée par IsGranted('ROLE_USER') #}
-            {# Mais c'est une bonne sécurité #}
             <div class="alert alert-warning" role="alert">
                 Vous devez être connecté pour voir cette page.
             </div>
@@ -47,15 +72,17 @@
     </div>
 {% endblock body_content %}
 
+{# --- BLOC POUR LES STYLES CSS SPÉCIFIQUES À CETTE PAGE --- #}
 {% block stylesheets %}
+    {# On n'oublie jamais 'parent()' pour hériter des styles globaux. #}
     {{ parent() }}
     <style>
         .avatar-img {
-            width: 150px;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 3px solid #eee; /* Optionnel: petite bordure */
+            width: 150px;           /* Largeur fixe de l'image. */
+            height: 150px;          /* Hauteur fixe pour former un carré parfait. */
+            object-fit: cover;      /* Garantit que l'image remplit le carré sans être déformée (essentiel pour les avatars). */
+            border-radius: 50%;     /* Transforme le carré en cercle parfait. */
+            border: 3px solid #eee; /* Ajoute une petite bordure grise claire pour un effet soigné. */
         }
     </style>
 {% endblock %}

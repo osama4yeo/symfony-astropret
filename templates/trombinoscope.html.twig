@@ -1,34 +1,77 @@
+{# --- FICHIER TEMPLATE POUR LE TROMBINOSCOPE --- #}
 {# templates/user/trombinoscope.html.twig #}
+
+{# 🏛️ On hérite de la structure de base du site. C'est la base de tout template Symfony/Twig. #}
 {% extends 'base.html.twig' %}
 
+{# ✏️ Définit le titre qui s'affichera dans l'onglet du navigateur. #}
 {% block title %}Trombinoscope{% endblock %}
 
+{# 📝 C'est ici que commence le contenu principal de la page. #}
 {% block body_content %}
-<div class="container mt-4"> {# Ajout d'un container pour un meilleur espacement #}
-    <h1 class="mb-4">Trombinoscope</h1> {# Ajout de marge en bas du titre #}
+{# 'container' centre le contenu et 'mt-4' ajoute une marge au-dessus (Margin-Top 4). #}
+<div class="container mt-4">
+    {# 'mb-4' ajoute une marge en dessous du titre (Margin-Bottom 4). #}
+    <h1 class="mb-4">Trombinoscope</h1>
 
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4"> {# Grille Bootstrap pour la responsivité #}
+    {# --- GRILLE RESPONSIVE BOOTSTRAP --- #}
+    {# 'row' initialise une nouvelle ligne de la grille. #}
+    {# 'row-cols-1' : 1 colonne sur les écrans très petits (par défaut). #}
+    {# 'row-cols-sm-2' : 2 colonnes sur les petits écrans (sm) et plus. #}
+    {# 'row-cols-md-3' : 3 colonnes sur les écrans moyens (md) et plus. #}
+    {# 'row-cols-lg-4' : 4 colonnes sur les grands écrans (lg) et plus. #}
+    {# 'g-4' : Ajoute un espacement (gutter) de taille 4 entre les colonnes et les lignes. #}
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+        
+        {# --- BOUCLE SUR LES UTILISATEURS --- #}
+        {# On parcourt la liste des utilisateurs (la variable 'users' est passée depuis le contrôleur). #}
+        {# 'user_item' représente un utilisateur à chaque tour de boucle. #}
         {% for user_item in users %}
+            {# 'col' : Définit cet élément comme une colonne de la grille. #}
+            {# 'd-flex align-items-stretch' : Astuce Bootstrap pour que toutes les cartes de la même ligne aient la même hauteur, même si leur contenu varie. #}
             <div class="col d-flex align-items-stretch">
-                <div class="card w-100 text-center shadow-sm"> {# text-center pour le contenu de la carte, w-100 #}
-                    <div class="p-3"> {# Ajout d'un padding autour de l'image pour ne pas qu'elle touche les bords de la carte #}
+                {# 'card' : Style de base de la carte Bootstrap. #}
+                {# 'w-100' : La carte prend 100% de la largeur de sa colonne. #}
+                {# 'text-center' : Centre le texte à l'intérieur de la carte. #}
+                {# 'shadow-sm' : Ajoute une ombre légère et discrète. #}
+                <div class="card w-100 text-center shadow-sm">
+                    {# 'p-3' : Ajoute un padding (rembourrage intérieur) pour que l'image ne colle pas aux bords. #}
+                    <div class="p-3">
+                        
+                        {# --- AFFICHAGE CONDITIONNEL DE L'AVATAR --- #}
+                        {# On vérifie si l'utilisateur a un avatar personnalisé. #}
                         {% if user_item.avatar %}
+                            {# 🖼️ CAS 1 : L'UTILISATEUR A UN AVATAR #}
+                            {# 'asset()' est la fonction Twig INDISPENSABLE pour générer le bon chemin vers un fichier public. #}
+                            {# '~' est l'opérateur de concaténation en Twig. On assemble le chemin et le nom du fichier. #}
                             <img src="{{ asset('uploads/avatars/' ~ user_item.avatar) }}" 
-                                 class="img-fluid square-image avatar-trombino-img rounded-circle mx-auto" {# img-fluid, square-image, avatar-trombino-img, rounded-circle, mx-auto #}
+                                 {# 'img-fluid' : Rend l'image responsive, elle ne dépassera jamais de son conteneur. #}
+                                 {# 'rounded-circle' : Affiche l'image dans un cercle parfait. #}
+                                 {# 'mx-auto' : Centre l'image horizontalement (Margin X-axis Auto). #}
+                                 class="img-fluid rounded-circle mx-auto"
+                                 {# 🛡️ L'attribut 'alt' est crucial pour l'accessibilité (lecteurs d'écran) et le SEO. #}
                                  alt="Avatar de {{ user_item.prenom }}"
-                                 style="max-width: 150px;"> {# Limiter la taille maximale de l'avatar si besoin #}
+                                 {# Optimisation : Ajoute l'attribut 'loading="lazy"' pour améliorer les performances. Voir explication plus bas. #}
+                                 loading="lazy"
+                                 style="max-width: 150px; object-fit: cover; aspect-ratio: 1 / 1;"> {# Style pour garantir une taille fixe et un affichage correct. #}
                         {% else %}
+                            {# 🖼️ CAS 2 : L'UTILISATEUR N'A PAS D'AVATAR #}
+                            {# On affiche une image par défaut. 'asset()' est aussi utilisé ici pour la robustesse. #}
                             <img src="{{ asset('images/default-avatar-icon-of-social-media-user-vector.jpg') }}" 
-                                 class="img-fluid square-image avatar-trombino-img rounded-circle mx-auto" 
+                                 class="img-fluid rounded-circle mx-auto" 
                                  alt="Avatar par défaut"
-                                 style="max-width: 150px; filter: grayscale(80%);">
+                                 loading="lazy"
+                                 style="max-width: 150px; filter: grayscale(80%);"> {# 'filter' met l'image en niveaux de gris pour bien la différencier. #}
                         {% endif %}
                     </div>
                     <div class="card-body">
+                        {# Affiche le prénom et le nom. Twig les protège automatiquement contre les injections de code (voir explications). #}
                         <h5 class="card-title">{{ user_item.prenom }} {{ user_item.nom }}</h5>
                     </div>
                 </div>
             </div>
+        {# --- CAS OÙ IL N'Y A AUCUN UTILISATEUR --- #}
+        {# Le bloc 'else' de la boucle 'for' s'exécute si la variable 'users' est vide. C'est très pratique. #}
         {% else %}
             <div class="col">
                 <p class="alert alert-info">Aucun utilisateur trouvé.</p>
@@ -38,24 +81,20 @@
 </div>
 {% endblock body_content %}
 
+{# --- BLOC POUR LES FEUILLES DE STYLE CSS --- #}
 {% block stylesheets %}
+    {# 'parent()' est essentiel pour inclure les CSS du template de base. #}
     {{ parent() }}
-    {# Les styles spécifiques pour .card et .card-body peuvent rester ici si vous le souhaitez,
-       ou être déplacés dans style.css.
-       La classe .avatar-trombino-img dans style.css s'occupe de la forme carrée.
-    #}
+    
+    {# Ce bloc <style> est un bon endroit pour des ajustements mineurs spécifiques à la page. #}
+    {# Pour des styles plus complexes, il est recommandé de les mettre dans un fichier CSS séparé. #}
     <style>
-        .card {
-            /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */ /* Déjà dans la classe shadow-sm de Bootstrap */
-            /* transition: 0.3s; */ /* Peut être ajouté si vous voulez un effet au survol global */
+        /* J'ai légèrement modifié vos styles pour garantir que les images soient toujours carrées avant d'être arrondies,
+           même si l'image originale n'est pas carrée. */
+        .rounded-circle {
+            width: 150px;       /* Définit une largeur fixe. */
+            height: 150px;      /* Définit une hauteur fixe pour créer un carré. */
+            object-fit: cover;  /* Assure que l'image remplit l'espace sans se déformer, en coupant les bords si nécessaire. C'est la meilleure méthode pour les avatars. */
         }
-        /* .card:hover {
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-        } */
-        /* .avatar-img { ... } a été remplacé par .square-image et .avatar-trombino-img dans style.css */
-        
-        /* .card-body {
-            text-align: center;
-        } Déjà géré par text-center sur la carte */
     </style>
 {% endblock %}

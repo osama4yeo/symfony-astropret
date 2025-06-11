@@ -1,3 +1,4 @@
+{# --- FICHIER TEMPLATE POUR LE FORMULAIRE DE MODIFICATION DE PROFIL --- #}
 {% extends 'base.html.twig' %}
 
 {% block title %}Modifier mon profil{% endblock %}
@@ -6,49 +7,90 @@
     <div class="container mt-4">
         <h1 class="mb-4">Modifier mon profil</h1>
 
-        {# Affiche les messages flash (succès/erreur) #}
+        {# --- AFFICHAGE DES MESSAGES FLASH --- #}
+        {# Affiche les messages de succès. C'est bien, mais pour être plus complet,
+           vous pourriez utiliser le partiel '_flash_messages.html.twig' comme dans la page de profil,
+           qui gère tous les types de messages (success, error, warning, etc.). #}
         {% for message in app.flashes('success') %}
             <div class="alert alert-success">
                 {{ message }}
             </div>
         {% endfor %}
+        {# Vous pourriez aussi ajouter une boucle pour les messages d'erreur :
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-danger">{{ message }}</div>
+        {% endfor %}
+        #}
 
+
+        {# --- DÉBUT DU FORMULAIRE --- #}
+        {# 🛡️ SÉCURITÉ MAJEURE : 'form_start(form)' fait bien plus que créer la balise <form>.
+           1. Il ajoute l'attribut method="POST".
+           2. Il inclut automatiquement un champ caché contenant un **jeton anti-CSRF (Cross-Site Request Forgery)**.
+              C'est une protection essentielle qui garantit que le formulaire a bien été soumis depuis votre site.
+           
+           ✅ 'enctype': 'multipart/form-data' est ABSOLUMENT NÉCESSAIRE si votre formulaire permet de téléverser des fichiers (comme un avatar).
+              Même si le champ n'est pas affiché ici, sa présence suggère que votre FormType le gère. #}
         {{ form_start(form, { 'attr': { 'enctype': 'multipart/form-data' } }) }}
 
-
+            {# --- BLOC POUR LE PRÉNOM --- #}
+            {# 'form_label' : Affiche le label (ex: "Prénom"). Il est automatiquement lié à son champ d'input pour l'accessibilité. #}
+            {# 'form_widget' : Affiche le champ de saisie (<input type="text"...>). Les classes Bootstrap sont ajoutées via 'attr'. #}
+            {# 'form_errors' : Affiche les messages d'erreur de validation pour CE champ spécifique (ex: "Ce champ ne peut pas être vide.").
+                              Ces erreurs proviennent des contraintes que vous avez définies en PHP (dans l'entité ou le FormType). #}
             <div class="mb-3">
                 {{ form_label(form.prenom) }}
                 {{ form_widget(form.prenom, { 'attr': {'class': 'form-control'} }) }}
-                {{ form_errors(form.prenom) }}
+                <div class="text-danger">
+                    {{ form_errors(form.prenom) }}
+                </div>
             </div>
 
+            {# --- BLOC POUR LE NOM --- #}
             <div class="mb-3">
                 {{ form_label(form.nom) }}
                 {{ form_widget(form.nom, { 'attr': {'class': 'form-control'} }) }}
-                {{ form_errors(form.nom) }}
+                <div class="text-danger">{{ form_errors(form.nom) }}</div>
             </div>
 
+            {# --- BLOC POUR L'EMAIL --- #}
             <div class="mb-3">
                 {{ form_label(form.email) }}
                 {{ form_widget(form.email, { 'attr': {'class': 'form-control'} }) }}
-                {{ form_errors(form.email) }}
+                <div class="text-danger">{{ form_errors(form.email) }}</div>
             </div>
 
+            {# --- BLOC POUR LE TÉLÉPHONE --- #}
             <div class="mb-3">
                 {{ form_label(form.telephone) }}
                 {{ form_widget(form.telephone, { 'attr': {'class': 'form-control'} }) }}
-                {{ form_errors(form.telephone) }}
+                <div class="text-danger">{{ form_errors(form.telephone) }}</div>
             </div>
 
+            {# --- BLOC POUR LA DATE DE NAISSANCE --- #}
             <div class="mb-3">
                 {{ form_label(form.dateNaissance) }}
-                {{ form_widget(form.dateNaissance, { 'attr': {'class': 'form-control'} }) }}
-                {{ form_errors(form.dateNaissance) }}
+                {{ form_widget(form.dateNaissance) }} {# Symfony choisit souvent le bon widget (ex: 3 listes déroulantes). #}
+                <div class="text-danger">{{ form_errors(form.dateNaissance) }}</div>
             </div>
 
-            <button type="submit" class="btn btn-primary">Enregistrer</button>
+            {# --- EXEMPLE POUR UN CHAMP AVATAR (SI VOUS EN AVEZ UN) --- #}
+            {# Si votre formulaire contient un champ pour l'avatar (ex: 'avatarFile'), voici comment l'afficher :
+            <div class="mb-3">
+                {{ form_label(form.avatarFile, 'Nouvel avatar (optionnel)') }}
+                {{ form_widget(form.avatarFile, { 'attr': {'class': 'form-control'} }) }}
+                <div class="form-text">Laissez vide pour conserver l'avatar actuel.</div>
+                <div class="text-danger">{{ form_errors(form.avatarFile) }}</div>
+            </div>
+            #}
+
+            {# --- BOUTONS D'ACTION --- #}
+            <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+            {# 'path()' génère l'URL pour retourner à la page de profil, c'est la bonne pratique. #}
             <a href="{{ path('user_profile') }}" class="btn btn-secondary ms-2">Annuler</a>
 
+        {# --- FIN DU FORMULAIRE --- #}
+        {# 'form_end(form)' ferme la balise </form> et s'assure que tous les champs du formulaire (y compris les champs cachés comme le jeton CSRF) ont bien été rendus. #}
         {{ form_end(form) }}
     </div>
 {% endblock %}
