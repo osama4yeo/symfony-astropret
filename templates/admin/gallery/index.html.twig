@@ -1,0 +1,102 @@
+{# templates/admin/gallery/index.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion de la Galerie d'Images{% endblock %}
+
+{% block body_content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Gestion de la Galerie d'Images</h1>
+        <a href="{{ path('admin_gallery_new') }}" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle-fill me-1" viewBox="0 0 16 16">
+              <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
+            </svg>
+            Ajouter une Image
+        </a>
+    </div>
+
+    {% include 'partials/_flash_messages.html.twig' ignore missing %}
+
+    {% if gallery_items is not empty %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 100px;">Image</th>
+                        <th>Titre</th>
+                        <th>Description (extrait)</th>
+                        <th class="text-center">Active</th>
+                        <th class="text-center">Ordre</th>
+                        <th>Dern. Modif.</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for item in gallery_items %}
+                    <tr>
+                        <td>
+                            {% if item.imageFilename %}
+                                <a href="{{ asset('images/gallery/' ~ item.imageFilename) }}" data-lightbox="admin-gallery-preview-{{ item.id }}" data-title="{{ item.titre }}">
+                                    <img src="{{ asset('images/gallery/' ~ item.imageFilename) }}" alt="{{ item.titre }}" style="max-width: 80px; max-height: 60px; object-fit: cover; border-radius: .25rem;">
+                                </a>
+                            {% else %}
+                                <span class="text-muted fst-italic">Pas d'image</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.titre }}</td>
+                        <td>{{ item.description|slice(0, 70) ~ (item.description|length > 70 ? '...' : '') }}</td>
+                        <td class="text-center">
+                            {% if item.isIsActive %}
+                                <span class="badge bg-success">Oui</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Non</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">{{ item.ordreAffichage|default('-') }}</td>
+                        <td>{{ item.updatedAt ? item.updatedAt|date('d/m/Y H:i') : 'N/A' }}</td>
+                        <td class="text-end">
+                            <a href="{{ path('admin_gallery_edit', {'id': item.id}) }}" class="btn btn-sm btn-outline-primary mb-1" title="Modifier">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                  <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                  <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
+                                </svg>
+                            </a>
+                            <div style="display: inline-block;">
+                                <form method="post" action="{{ path('admin_gallery_delete', {'id': item.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette image ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ item.id) }}">
+                                    <button class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
+                                          <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.024l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                       </td>
+                   </tr>
+                {% else %} {# Correspond au for gallery_items #}
+                   <tr>
+                       <td colspan="7" class="text-center py-4">Aucune image trouvée dans la galerie. <a href="{{ path('admin_gallery_new') }}">Ajoutez-en une !</a></td>
+                   </tr>
+                {% endfor %} {# Fin de la boucle for gallery_items #}
+                </tbody>
+            </table>
+        </div>
+    {% else %} {# Correspond au if gallery_items is not empty #}
+        <div class="alert alert-info" role="alert">
+           Aucune image trouvée dans la galerie. <a href="{{ path('admin_gallery_new') }}" class="alert-link">Commencez par en ajouter une.</a>
+       </div>
+    {% endif %} {# Fin du if gallery_items is not empty #}
+</div>
+{% endblock body_content %} {# Fin du bloc body_content #}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {# Si vous n'avez pas Lightbox2 globalement et que vous le voulez pour les previews admin #}
+    {# <link href="{{ asset('assets/lightbox2/css/lightbox.min.css') }}" rel="stylesheet" /> #}
+{% endblock %} {# Fin du bloc stylesheets #}
+
+{% block javascripts_page_specific %}
+    {{ parent() }}
+    {# Si vous n'avez pas Lightbox2 globalement et que vous le voulez pour les previews admin #}
+    {# <script src="{{ asset('assets/lightbox2/js/lightbox.min.js') }}"></script> #}
+{% endblock %} {# Fin du bloc javascripts_page_specific #}

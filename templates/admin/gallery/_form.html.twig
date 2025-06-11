@@ -1,0 +1,31 @@
+{# templates/admin/gallery/_form.html.twig #}
+{{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+    {# Afficher les erreurs globales du formulaire (non liées à un champ spécifique) #}
+    {{ form_errors(form) }}
+
+    {{ form_row(form.titre) }}
+    {{ form_row(form.description) }}
+    
+    {% if form.vars.data and form.vars.data.id and form.vars.data.imageFilename %}
+        <div class="mb-3">
+            <p>Image actuelle :</p>
+            <img src="{{ asset('images/gallery/' ~ form.vars.data.imageFilename) }}"
+                 alt="{{ form.vars.data.titre }}" 
+                 style="max-width: 200px; max-height: 150px; object-fit: cover; border:1px solid #ddd; padding:3px;">
+        </div>
+    {% endif %}
+    
+    {# Champ imageFile avec affichage explicite des erreurs #}
+    <div class="mb-3">
+        {{ form_label(form.imageFile) }}
+        {{ form_widget(form.imageFile) }}
+        <div class="form-text text-muted">{{ form_help(form.imageFile) }}</div>
+        <div class="text-danger">{{ form_errors(form.imageFile) }}</div> {# Affiche les erreurs spécifiques à ce champ #}
+    </div>
+
+    {{ form_row(form.ordreAffichage) }}
+    {{ form_row(form.isActive) }}
+
+    <button type="submit" class="btn btn-success mt-3">{{ button_label|default('Enregistrer') }}</button>
+    <a href="{{ path('admin_gallery_index') }}" class="btn btn-secondary mt-3">Annuler</a>
+{{ form_end(form) }}

@@ -1,0 +1,18 @@
+{# templates/admin/gallery/edit.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier l'Image de Galerie : {{ gallery_item.titre }}{% endblock %}
+
+{% block body_content %}
+    <div class="container mt-4">
+        <h1>Modifier l'Image : <small class="text-muted">{{ gallery_item.titre }}</small></h1>
+
+        {% include 'admin/gallery/_form.html.twig' with {'form': form, 'button_label': 'Mettre à jour'} %}
+
+        <hr class="my-4">
+        {# Formulaire de suppression séparé #}
+        <h2 class="h4">Supprimer cette image</h2>
+        <p>Cette action est irréversible.</p>
+        {{ include('admin/gallery/_delete_form.html.twig') }}
+    </div>
+{% endblock %}

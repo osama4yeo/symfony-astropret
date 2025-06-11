@@ -1,26 +1,22 @@
 # config/services.yaml
 parameters:
     avatars_directory: '%kernel.project_dir%/public/uploads/avatars'
-    # --- AJOUT DU NOUVEAU PARAMÈTRE ---
-    materiels_directory: '%kernel.project_dir%/public/images/materiel' # Chemin pour les images du matériel
+    materiels_directory: '%kernel.project_dir%/public/images/materiel'
+    # --- AJOUT DU NOUVEAU PARAMÈTRE POUR LES IMAGES DE LA GALERIE ---
+    gallery_images_directory: '%kernel.project_dir%/public/images/gallery' # Dossier pour les images de la galerie
 
 services:
     # default configuration for services in *this* file
     _defaults:
-        autowire: true      # Automatically injects dependencies in your services.
-        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
-        # public: false # Gardé pour cohérence, même si c'est souvent le défaut.
+        autowire: true
+        autoconfigure: true
+        # public: false # Laissé pour cohérence, mais souvent le défaut
 
     # makes classes in src/ available to be used as services
-    # this creates a service per class whose id is the fully-qualified class name
     App\:
-        resource: '../src/' # Légère correction du chemin pour la découverte standard
+        resource: '../src/'
         exclude:
-            - '../src/DependencyInjection/'
-            - '../src/Entity/'
-            # - '../src/Migrations/' # Les migrations ne sont généralement pas des services, peut être exclu.
-            - '../src/Tests/'
-            - '../src/Kernel.php'
+            # Correction de l'exclusion multiple, une seule suffit pour le chemin
             - '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
 
     # Configuration pour CalendarSubscriber (inchangée)
@@ -28,21 +24,18 @@ services:
         tags:
             - { name: 'kernel.event_subscriber' }
 
-    # --- AJOUT DE LA LIAISON POUR MATERIELCONTROLLER ---
-    # Nécessaire pour injecter le paramètre scalaire $materielsDirectory
-    # dans les actions du MaterielController qui en ont besoin.
+    # Configuration pour MaterielController (inchangée)
     App\Controller\MaterielController:
-        # Si vous utilisez Symfony 5.3+ et PHP 8 avec des arguments nommés dans
-        # les actions du contrôleur (ex: public function new(..., string $materielsDirectory)),
-        # l'autowiring par nom pourrait fonctionner si le paramètre est défini globalement.
-        # Cependant, pour être explicite et garantir que cela fonctionne sur différentes versions
-        # ou si l'autowiring par nom n'est pas configuré/actif pour les arguments d'action,
-        # utiliser 'bind' est une solution robuste pour les contrôleurs.
         bind:
             $materielsDirectory: '%materiels_directory%'
 
-    # Si vous avez déjà une configuration pour GoogleCalendarService, elle reste ici :
+    # Configuration pour GoogleCalendarService (inchangée)
     App\Service\GoogleCalendarService:
         arguments:
             $projectDir: '%kernel.project_dir%'
             $logger: '@?logger'
+
+    # --- AJOUT DE LA CONFIGURATION POUR AdminGalleryController ---
+    App\Controller\AdminGalleryController:
+        arguments: # Utiliser arguments car on l'injecte dans le constructeur
+            $galleryImagesDirectory: '%gallery_images_directory%'

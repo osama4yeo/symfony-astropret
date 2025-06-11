@@ -1,4 +1,4 @@
-{# templates/home/index.html.twig #}
+{# templates/home.html.twig #}
 {% extends 'base.html.twig' %}
 
 {% block title %}Accueil - Astropret{% endblock %}
@@ -25,105 +25,55 @@
             font-size: 0.9em;
             color: #6c757d;
         }
+
+        /* Style pour le bouton d'administration de la galerie */
+        .admin-gallery-manage-button {
+            position: fixed; /* ou absolute si vous avez un conteneur relatif */
+            top: 80px; /* Ajustez selon la hauteur de votre navbar */
+            left: 20px;
+            z-index: 1030; /* S'assurer qu'il est au-dessus d'autres éléments */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
     </style>
 {% endblock %}
 
 {% block body_content %}
+    {# Bouton pour l'admin pour gérer la galerie #}
+    {% if is_granted('ROLE_ADMIN') %}
+        <a href="{{ path('admin_gallery_index') }}" class="btn btn-warning admin-gallery-manage-button" title="Gérer la galerie d'images">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-images" viewBox="0 0 16 16" style="vertical-align: text-bottom;">
+              <path d="M4.502 9a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
+              <path d="M14.002 13a2 2 0 0 1-2 2h-10a2 2 0 0 1-2-2V5A2 2 0 0 1 2 3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-1.998 2zM14 2H4a1 1 0 0 0-1 1h9.002a2 2 0 0 1 2 2v7A1 1 0 0 0 15 11V3a1 1 0 0 0-1-1zM2.002 4a1 1 0 0 0-1 1v8l2.646-2.354a.5.5 0 0 1 .63-.062l2.66 1.773 3.71-3.71a.5.5 0 0 1 .577-.094l1.777 1.947V5a1 1 0 0 0-1-1h-10z"/>
+            </svg>
+            Gérer Galerie
+        </a>
+    {% endif %}
+
     <div class="container mt-4">
         <div class="text-center mb-5">
             <h1 class="display-4">Galerie Astronomique</h1>
             <p class="lead">Découvrez la beauté de l'univers à travers notre sélection d'images.</p>
         </div>
 
-        {# Assurez-vous que les chemins _thumb et _full sont corrects et que les images existent #}
-        {% set gallery_images = [
-            {
-                'thumb': asset('images/gallery/nebuleuse_orion_full.jpg'),  
-                'full': asset('images/gallery/nebuleuse_orion_full.jpg'),    
-                'title': 'Nébuleuse d\'Orion',
-                'description': 'Une magnifique région de formation d\'étoiles visible à l\'œil nu.'
-            },
-            {
-                'thumb': asset('images/gallery/galaxie_andromede_full.jpg'),
-                'full': asset('images/gallery/galaxie_andromede_full.jpg'),
-                'title': 'Galaxie d\'Andromède',
-                'description': 'Notre plus proche voisine galactique majeure.'
-            },
-            {
-                'thumb': asset('images/gallery/pleiades_full.jpg'),
-                'full': asset('images/gallery/pleiades_full.jpg'),
-                'title': 'Les Pléiades (M45)',
-                'description': 'Un amas ouvert d\'étoiles jeunes et bleues, aussi connu sous le nom des Sept Sœurs.'
-            },
-            {
-                'thumb': asset('images/gallery/lune_cratere_full.jpg'),
-                'full': asset('images/gallery/lune_cratere_full.jpg'),
-                'title': 'Cratère lunaire Tycho',
-                'description': 'Un cratère d\'impact proéminent sur la Lune, visible lors de la pleine lune.'
-            },
-            {
-                'thumb': asset('images/gallery/jupiter_grt_full.jpg'),
-                'full': asset('images/gallery/jupiter_grt_full.jpg'),
-                'title': 'Jupiter et sa Grande Tache Rouge',
-                'description': 'La plus grande planète du système solaire avec sa tempête anticyclonique géante.'
-            },
-            {
-                'thumb': asset('images/gallery/saturne_anneaux_full.jpg'),
-                'full': asset('images/gallery/saturne_anneaux_full.jpg'),
-                'title': 'Saturne et ses anneaux',
-                'description': 'Célèbre pour son système d\'anneaux spectaculaire composé de glace et de roche.'
-            },
-            {
-                'thumb': asset('images/gallery/voie_lactee_full.jpg'),
-                'full': asset('images/gallery/voie_lactee_full.jpg'),
-                'title': 'La Voie Lactée',
-                'description': 'Notre galaxie vue de l\'intérieur, une bande lumineuse d\'étoiles.'
-            },
-            {
-                'thumb': asset('images/gallery/nebuleuse_tete_cheval_full.jpg'),
-                'full': asset('images/gallery/nebuleuse_tete_cheval_full.jpg'),
-                'title': 'Nébuleuse de la Tête de Cheval',
-                'description': 'Une nébuleuse obscure dans la constellation d\'Orion.'
-            },
-            {
-                'thumb': asset('images/gallery/mars_olympus_mons_full.jpg'),
-                'full': asset('images/gallery/mars_olympus_mons_full.jpg'),
-                'title': 'Le Mont Olympe sur Mars',
-                'description': 'Le plus grand volcan connu du système solaire.'
-            },
-            {
-                'thumb': asset('images/gallery/nebuleuse_carina_full.jpg'),
-                'full': asset('images/gallery/nebuleuse_carina_full.jpg'),
-                'title': 'Nébuleuse de la Carène',
-                'description': 'Une vaste région de formation d\'étoiles dans l\'hémisphère sud.'
-            },
-            {
-                'thumb': asset('images/gallery/comete_neowise_full.jpg'),
-                'full': asset('images/gallery/comete_neowise_full.jpg'),
-                'title': 'Comète NEOWISE (2020)',
-                'description': 'Une comète spectaculaire visible à l\'œil nu en 2020.'
-            },
-            {
-                'thumb': asset('images/gallery/eclipse_solaire_full.jpg'),
-                'full': asset('images/gallery/eclipse_solaire_full.jpg'),
-                'title': 'Éclipse solaire totale',
-                'description': 'Lorsque la Lune passe directement entre le Soleil et la Terre.'
-            }
-        ] %}
-
-        {% if gallery_images is not empty %}
+        {# Utilisation de la variable gallery_items_data passée par HomeController #}
+        {% if gallery_items_data is not empty %}
             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-                {% for image_data in gallery_images %}
-                    <div class="col gallery-item">
-                        <div class="card h-100 shadow-sm">
-                            {# Le lien pointe vers l'image pleine résolution pour Lightbox #}
-                            <a href="{{ image_data.full }}" data-lightbox="astro-gallery" data-title="{{ image_data.title ~ (image_data.description ? ' - ' ~ image_data.description : '') }}">
-                                {# L'image affichée dans la grille est la miniature #}
-                                <img src="{{ image_data.thumb }}" class="card-img-top gallery-img" alt="{{ image_data.title }}">
+                {% for item in gallery_items_data %} {# Changement de nom de variable de boucle #}
+                    <div class="col gallery-item d-flex align-items-stretch"> {# Ajout d-flex align-items-stretch #}
+                        <div class="card h-100 shadow-sm w-100"> {# Ajout w-100 et h-100 ici aussi #}
+                            <a href="{{ asset('images/gallery/' ~ item.imageFilename) }}" 
+                               data-lightbox="astro-gallery" 
+                               data-title="{{ item.titre ~ (item.description ? ' - ' ~ item.description : '') }}">
+                                <img src="{{ asset('images/gallery/' ~ item.imageFilename) }}" class="card-img-top gallery-img" alt="{{ item.titre }}">
                             </a>
-                            <div class="card-body">
-                                <h5 class="card-title card-title-gallery">{{ image_data.title }}</h5>
-                                <p class="card-text card-text-gallery">{{ image_data.description }}</p>
+                            <div class="card-body d-flex flex-column"> {# d-flex flex-column pour pousser la description/date en bas si besoin #}
+                                <h5 class="card-title card-title-gallery">{{ item.titre }}</h5>
+                                {% if item.description %}
+                                    <p class="card-text card-text-gallery">{{ item.description }}</p>
+                                {% endif %}
+                                <p class="card-text small text-muted mt-auto"> {# mt-auto pour pousser en bas #}
+                                    <small>Publié le : {{ item.updatedAt|date('d/m/Y') }}</small>
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -137,5 +87,5 @@
 
 {% block javascripts_page_specific %}
     {{ parent() }}
-    {# Aucun script spécifique supplémentaire n'est requis ici pour Lightbox2 s'il est bien inclus dans base.html.twig #}
+    {# Lightbox2 s'initialise automatiquement #}
 {% endblock %}

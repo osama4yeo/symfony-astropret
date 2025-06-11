@@ -1,0 +1,15 @@
+{# templates/admin/gallery/new.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Ajouter une Image à la Galerie{% endblock %}
+
+{% block body_content %}
+    <div class="container mt-4">
+        <h1>Ajouter une Nouvelle Image à la Galerie</h1>
+
+        {% include 'partials/_flash_messages.html.twig' ignore missing %} {# Pour afficher les addFlash du contrôleur #}
+
+        {# Le gallery_item est passé par le contrôleur new() #}
+        {% include 'admin/gallery/_form.html.twig' with {'form': form, 'gallery_item': gallery_item, 'button_label': 'Ajouter l\'image'} %}
+    </div>
+{% endblock %}
